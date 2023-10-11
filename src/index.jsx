@@ -79,7 +79,7 @@ map.on('moveend', function() {
                 [box.path[2][1], box.path[2][0]],
                 [box.path[3][1], box.path[3][0]],
             ];
-            poly = L.polygon(polygon, {color: 'black', weight: 1, fill: true}).addTo(map);
+            poly = L.polygon(polygon, {color: '#666666', weight: 1, fill: true}).addTo(map);
             polyList[cells[i]["S2Key"]] = poly;
 
             recolorCell(cells[i]["S2Key"]);
@@ -97,7 +97,7 @@ map.on('moveend', function() {
                 recolorCell(s2key);
             });
 
-            poly.on('contextmenu', function(e) {
+            /*poly.on('contextmenu', function(e) {
                 var s2key = cells[i]["S2Key"];
 
                 if (s2key in knownCells === false) {
@@ -111,7 +111,7 @@ map.on('moveend', function() {
                 }
 
                 recolorCell(s2key);
-            });
+            });*/
         }
     }
 });

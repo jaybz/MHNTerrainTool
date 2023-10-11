@@ -1181,7 +1181,7 @@
           [box.path[2][1], box.path[2][0]],
           [box.path[3][1], box.path[3][0]]
         ];
-        poly = L.polygon(polygon, { color: "black", weight: 1, fill: true }).addTo(map);
+        poly = L.polygon(polygon, { color: "#666666", weight: 1, fill: true }).addTo(map);
         polyList[cells[i2]["S2Key"]] = poly;
         recolorCell(cells[i2]["S2Key"]);
         poly.on("click", function(e) {
@@ -1191,19 +1191,6 @@
           } else {
             var interval = (knownCells[s2key].order + colorOrder.length * 3 + getCurrentUTCDate().getDate() - knownCells[s2key].origin.getDate()) % colorOrder.length;
             knownCells[s2key].origin.setDate(getCurrentUTCDate().getDate() - interval);
-          }
-          recolorCell(s2key);
-        });
-        poly.on("contextmenu", function(e) {
-          var s2key = cells[i2]["S2Key"];
-          if (s2key in knownCells === false) {
-            knownCells[s2key] = { origin: getCurrentUTCDate(), order: -1 };
-          } else {
-            if (knownCells[s2key].order > 0) {
-              knownCells[s2key].order = -1;
-            } else {
-              knownCells[s2key].order = 1;
-            }
           }
           recolorCell(s2key);
         });
