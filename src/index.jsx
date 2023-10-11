@@ -97,21 +97,18 @@ map.on('moveend', function() {
                 recolorCell(s2key);
             });
 
-            /*poly.on('contextmenu', function(e) {
+            poly.on('contextmenu', function(e) {
                 var s2key = cells[i]["S2Key"];
 
-                if (s2key in knownCells === false) {
-                    knownCells[s2key] = {origin: getCurrentUTCDate(), order: -1};
-                } else {
+                if (s2key in knownCells) {
                     if (knownCells[s2key].order > 0) {
                         knownCells[s2key].order = -1;
                     } else {
                         knownCells[s2key].order = 1;
                     }
+                    recolorCell(s2key);
                 }
-
-                recolorCell(s2key);
-            });*/
+            });
         }
     }
 });

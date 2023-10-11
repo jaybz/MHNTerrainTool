@@ -1194,6 +1194,17 @@
           }
           recolorCell(s2key);
         });
+        poly.on("contextmenu", function(e) {
+          var s2key = cells[i2]["S2Key"];
+          if (s2key in knownCells) {
+            if (knownCells[s2key].order > 0) {
+              knownCells[s2key].order = -1;
+            } else {
+              knownCells[s2key].order = 1;
+            }
+            recolorCell(s2key);
+          }
+        });
       }
     }
   });
