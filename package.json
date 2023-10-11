@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "s2-cell-draw": "^1.1.4"
+  },
+  "devDependencies": {
+    "esbuild": "0.19.4"
+  }
+}
