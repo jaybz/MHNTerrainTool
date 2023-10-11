@@ -79,7 +79,7 @@ map.on('moveend', function() {
                 [box.path[2][1], box.path[2][0]],
                 [box.path[3][1], box.path[3][0]],
             ];
-            poly = L.polygon(polygon, {color: '#666666', weight: 1, fill: true}).addTo(map);
+            poly = L.polygon(polygon, {color: '#999999', weight: 1, fill: true}).addTo(map);
             polyList[cells[i]["S2Key"]] = poly;
 
             recolorCell(cells[i]["S2Key"]);
