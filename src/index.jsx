@@ -1,7 +1,10 @@
 const s2 = require('s2-cell-draw');
+const localStorageKey = 'MHNTerrainTool';
+const localStorageVersion = 1;
 const colorOrder = ['#ff9900', '#009933', '#cc00ff'];
-var knownCells = [];
+var knownCells = {};
 var polyList = [];
+const dataVersion = localStorageVersion + '.' + colorOrder.length;
 
 function showCurrentLocation() {
     if (map) {
@@ -55,6 +58,38 @@ function getTerrainColor(s2key) {
     return color;
 }
 
+function getData() {
+    if (!localStorage.knownCells || !localStorage.dataVersion || localStorage.dataVersion != dataVersion) {
+        saveData();
+        alert('Application Data Initialized');
+    } else {
+        knownCells = JSON.parse(localStorage.knownCells, parseKnownCells);
+    }
+}
+
+function saveData() {
+    localStorage.knownCells = JSON.stringify(knownCells);
+    localStorage.dataVersion = dataVersion;
+}
+
+function stringifyKnownCells(key, value) {
+    if (key == "origin") {
+        value.getTime();
+    } else {
+        return value;
+    }
+}
+
+function parseKnownCells(key, value) {
+    if (key == "origin") {
+        return new Date(value);
+    } else {
+        return value;
+    }
+}
+
+getData();
+
 var map = L.map('map').setView([0, 0], 13);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -93,6 +128,7 @@ map.on('moveend', function() {
                     var interval = ((knownCells[s2key].order + (colorOrder.length * 3)) + getCurrentUTCDate().getDate() - knownCells[s2key].origin.getDate()) % colorOrder.length;
                     knownCells[s2key].origin.setDate(getCurrentUTCDate().getDate() - interval);
                 }
+                saveData();
 
                 recolorCell(s2key);
             });
@@ -106,6 +142,7 @@ map.on('moveend', function() {
                     } else {
                         knownCells[s2key].order = 1;
                     }
+                    saveData();
                     recolorCell(s2key);
                 }
             });
