@@ -1269,6 +1269,7 @@
               modal: true,
               closeButton: false,
               position: "center",
+              content: "Current rotation: " + (knownCells[s2key].order > 0 ? "Desert > Forest > Swamp" : "Desert > Swamp > Forest"),
               prompt: {
                 buttonOK: '<i class="fa fa-trash-o" aria-hidden="true" title="Clear Cell"></i>',
                 callback: function() {
