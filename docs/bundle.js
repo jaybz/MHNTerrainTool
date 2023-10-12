@@ -1326,6 +1326,28 @@
       iconElementTag: "i",
       clickBehavior: { inView: "stop", outOfView: "setView", inViewNotFollowing: "setView" }
     }).addTo(map);
+    L.easyBar([
+      L.easyButton({
+        id: "export-button",
+        states: [{
+          icon: "fa-download",
+          title: "Export Data",
+          onClick: function(btn, map2) {
+            alert("Data export coming soon");
+          }
+        }]
+      }),
+      L.easyButton({
+        id: "import-button",
+        states: [{
+          icon: "fa-upload",
+          title: "Import Data",
+          onClick: function(btn, map2) {
+            alert("Data import coming soon");
+          }
+        }]
+      })
+    ]).addTo(map);
     L.control.watermark({ position: "bottomleft" }).addTo(map);
     map.on("moveend", mapMove);
     showCurrentLocation();

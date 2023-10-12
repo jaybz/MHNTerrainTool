@@ -26,6 +26,7 @@ L.control.watermark = function(opts) {
     return new L.Control.Watermark(opts);
 }
 
+
 function dataMigrationOldToV1(versionedData) {
     if(versionedData == null) return versionedData;
     var version = versionedData.version;
@@ -253,6 +254,38 @@ function mapInit() {
         clickBehavior: {inView: 'stop', outOfView: 'setView', inViewNotFollowing: 'setView'}
     }).addTo(map);
 
+    L.easyBar([
+        L.easyButton({
+            id: 'export-button',
+            states: [{
+                icon: 'fa-download',
+                title: 'Export Data',
+                onClick: function(btn, map){
+                    alert('Data export coming soon');
+                }
+            }]
+        }),
+        L.easyButton({
+            id: 'import-button',
+            states: [{
+                icon: 'fa-upload',
+                title: 'Import Data',
+                onClick: function(btn, map){
+                    alert('Data import coming soon');
+                }
+            }]
+        })
+    ]).addTo(map);
+    /*
+    var dataBar = L.easyBar([
+        L.easyButton('fa-download', function(btn, map){
+            alert('Data export coming soon');
+        }),
+        L.easyButton('fa-upload', function(btn, map){
+            alert('Data import coming soon');
+        })
+    ]).addTo(map);
+    */
     // version watermark
     L.control.watermark({ position: 'bottomleft' }).addTo(map);
 
