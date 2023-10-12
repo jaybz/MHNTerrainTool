@@ -1254,34 +1254,36 @@
         });
         poly.on("contextmenu", function(e) {
           var s2key = cells[i2]["S2Key"];
-          var win = L.control.window(map, {
-            modal: true,
-            closeButton: false,
-            position: "center",
-            prompt: {
-              buttonOK: "Clear Cell",
-              callback: function() {
-                var s2key2 = cells[i2]["S2Key"];
-                delete knownCells[s2key2];
-                saveData();
-                recolorCell(s2key2);
-              },
-              buttonAction: "Reverse Terrain Order",
-              action: function() {
-                var s2key2 = cells[i2]["S2Key"];
-                if (s2key2 in knownCells) {
-                  if (knownCells[s2key2].order > 0) {
-                    knownCells[s2key2].order = -1;
-                  } else {
-                    knownCells[s2key2].order = 1;
-                  }
+          if (s2key in knownCells) {
+            var win = L.control.window(map, {
+              modal: true,
+              closeButton: false,
+              position: "center",
+              prompt: {
+                buttonOK: '<i class="fa fa-trash-o" aria-hidden="true" title="Clear Cell"></i>',
+                callback: function() {
+                  var s2key2 = cells[i2]["S2Key"];
+                  delete knownCells[s2key2];
                   saveData();
                   recolorCell(s2key2);
-                }
-              },
-              buttonCancel: "Cancel"
-            }
-          }).show();
+                },
+                buttonAction: '<i class="fa fa-refresh" aria-hidden="true" title="Reverse Terrain Order"></i>',
+                action: function() {
+                  var s2key2 = cells[i2]["S2Key"];
+                  if (s2key2 in knownCells) {
+                    if (knownCells[s2key2].order > 0) {
+                      knownCells[s2key2].order = -1;
+                    } else {
+                      knownCells[s2key2].order = 1;
+                    }
+                    saveData();
+                    recolorCell(s2key2);
+                  }
+                },
+                buttonCancel: '<i class="fa fa-times" aria-hidden="true" title="Cancel"></i>'
+              }
+            }).show();
+          }
         });
       }
     }
