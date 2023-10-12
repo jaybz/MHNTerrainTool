@@ -1254,15 +1254,34 @@
         });
         poly.on("contextmenu", function(e) {
           var s2key = cells[i2]["S2Key"];
-          if (s2key in knownCells) {
-            if (knownCells[s2key].order > 0) {
-              knownCells[s2key].order = -1;
-            } else {
-              knownCells[s2key].order = 1;
+          var win = L.control.window(map, {
+            modal: true,
+            closeButton: false,
+            position: "center",
+            prompt: {
+              buttonOK: "Clear Cell",
+              callback: function() {
+                var s2key2 = cells[i2]["S2Key"];
+                delete knownCells[s2key2];
+                saveData();
+                recolorCell(s2key2);
+              },
+              buttonAction: "Reverse Rotation",
+              action: function() {
+                var s2key2 = cells[i2]["S2Key"];
+                if (s2key2 in knownCells) {
+                  if (knownCells[s2key2].order > 0) {
+                    knownCells[s2key2].order = -1;
+                  } else {
+                    knownCells[s2key2].order = 1;
+                  }
+                  saveData();
+                  recolorCell(s2key2);
+                }
+              },
+              buttonCancel: "Cancel"
             }
-            saveData();
-            recolorCell(s2key);
-          }
+          }).show();
         });
       }
     }
