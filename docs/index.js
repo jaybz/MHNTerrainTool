@@ -1131,7 +1131,7 @@
   }
   function moveMapView(position) {
     if (map) {
-      map.setView([position.coords.latitude, position.coords.longitude], 13);
+      map.setView([position.coords.latitude, position.coords.longitude], 15);
     }
   }
   function clearCells() {
