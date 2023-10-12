@@ -160,7 +160,7 @@ function mapInit() {
     }).addTo(map);
     
     // map controls
-    L.control.locate({drawCircle: false}).addTo(map);
+    L.control.locate({drawCircle: false, keepCurrentZoomLevel: true}).addTo(map);
 
     // map events
     map.on('moveend', mapMove);
