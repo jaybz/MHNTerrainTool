@@ -1266,7 +1266,7 @@
                 saveData();
                 recolorCell(s2key2);
               },
-              buttonAction: "Reverse Rotation",
+              buttonAction: "Reverse Terrain Order",
               action: function() {
                 var s2key2 = cells[i2]["S2Key"];
                 if (s2key2 in knownCells) {

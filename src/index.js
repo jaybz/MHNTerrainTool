@@ -204,7 +204,7 @@ function mapMove() {
                             saveData();
                             recolorCell(s2key);
                         },
-                        buttonAction: 'Reverse Rotation',
+                        buttonAction: 'Reverse Terrain Order',
                         action: function() {
                             var s2key = cells[i]["S2Key"];
                             if (s2key in knownCells) {
