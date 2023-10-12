@@ -274,18 +274,20 @@ function mapInit() {
                     alert('Data import coming soon');
                 }
             }]
-        })
-    ]).addTo(map);
-    /*
-    var dataBar = L.easyBar([
-        L.easyButton('fa-download', function(btn, map){
-            alert('Data export coming soon');
         }),
-        L.easyButton('fa-upload', function(btn, map){
-            alert('Data import coming soon');
+        L.easyButton({
+            id: 'clear-data-button',
+            states: [{
+                icon: 'fa-trash',
+                title: 'Clear Data Data',
+                onClick: function(btn, map){
+                    var result = confirm('This will clear all cells of terrain. Are you sure you want to do this?');
+                    if (result) alert('Feature not yet available.');
+                }
+            }]
         })
     ]).addTo(map);
-    */
+
     // version watermark
     L.control.watermark({ position: 'bottomleft' }).addTo(map);
 

@@ -1346,6 +1346,18 @@
             alert("Data import coming soon");
           }
         }]
+      }),
+      L.easyButton({
+        id: "clear-data-button",
+        states: [{
+          icon: "fa-trash",
+          title: "Clear Data Data",
+          onClick: function(btn, map2) {
+            var result = confirm("This will clear all cells of terrain. Are you sure you want to do this?");
+            if (result)
+              alert("Feature not yet available.");
+          }
+        }]
       })
     ]).addTo(map);
     L.control.watermark({ position: "bottomleft" }).addTo(map);
