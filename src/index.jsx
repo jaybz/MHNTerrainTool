@@ -15,7 +15,7 @@ function dataMigrationOldToV1(versionedData) {
 
     // convert version 0, otherwise retain data
     if (version === 0) {
-        versionedData.version++; // only increment version, no need for new shit
+        versionedData.version++; // only increment version, no need for actual conversion
     } else {
         return versionedData;
     }
