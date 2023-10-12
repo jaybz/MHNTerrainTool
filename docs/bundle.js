@@ -1116,7 +1116,7 @@
     }
   });
 
-  // src/index.jsx
+  // src/index.js
   var s2 = require_s2_cell_draw();
   var colorOrder = ["#ff9900", "#009933", "#cc00ff"];
   var knownCells = {};

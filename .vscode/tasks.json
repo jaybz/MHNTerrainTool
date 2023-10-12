@@ -1,0 +1,13 @@
+{
+    "tasks": [{
+        "label": "npm:build",
+        "type": "shell",
+        "group": { "kind": "build", "isDefault": true },
+        "command": "npm run esbuild"
+    }, {
+        "label": "npm:start",
+        "type": "shell",
+        "group": { "kind": "none" },
+        "command": "npm run start"
+    }]
+}
