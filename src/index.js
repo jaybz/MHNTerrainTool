@@ -8,6 +8,8 @@ const dataMigrations = [dataMigrationOldToV1];
 const dataVersion = dataMigrations.length;
 const map = L.map('map').setView([0, 0], 13);
 
+var timerId = null;
+
 function dataMigrationOldToV1(versionedData) {
     if(versionedData == null) return versionedData;
     var version = versionedData.version;
@@ -42,9 +44,13 @@ function clearCells() {
     }
 }
 
+function recolorCellsInterval() {
+    if (document.visibilityState === "visible") recolorCells();
+}
+
 function recolorCells() {
     for (i in polyList) {
-        recolorCells(i);
+        recolorCell(i);
     }
 }
 
@@ -174,21 +180,6 @@ function mapMove() {
                 recolorCell(s2key);
             });
 
-            /*
-            poly.on('contextmenu', function(e) {
-                var s2key = cells[i]["S2Key"];
-
-                if (s2key in knownCells) {
-                    if (knownCells[s2key].order > 0) {
-                        knownCells[s2key].order = -1;
-                    } else {
-                        knownCells[s2key].order = 1;
-                    }
-                    saveData();
-                    recolorCell(s2key);
-                }
-            });
-            */
             poly.on('contextmenu', function(e) {
                 var s2key = cells[i]["S2Key"];
 
@@ -242,6 +233,7 @@ function mapInit() {
     map.on('moveend', mapMove);
     
     showCurrentLocation();
+    timerId = setInterval(recolorCellsInterval, 60000);
 }
 
 mapInit();

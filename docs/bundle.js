@@ -1124,6 +1124,7 @@
   var dataMigrations = [dataMigrationOldToV1];
   var dataVersion = dataMigrations.length;
   var map = L.map("map").setView([0, 0], 13);
+  var timerId = null;
   function dataMigrationOldToV1(versionedData) {
     if (versionedData == null)
       return versionedData;
@@ -1150,6 +1151,15 @@
     for (i in polyList) {
       map.removeLayer(polyList[i]);
       delete polyList[i];
+    }
+  }
+  function recolorCellsInterval() {
+    if (document.visibilityState === "visible")
+      recolorCells();
+  }
+  function recolorCells() {
+    for (i in polyList) {
+      recolorCell(i);
     }
   }
   function getCurrentUTCDate() {
@@ -1296,6 +1306,7 @@
     L.control.locate({ drawCircle: false, keepCurrentZoomLevel: true }).addTo(map);
     map.on("moveend", mapMove);
     showCurrentLocation();
+    timerId = setInterval(recolorCellsInterval, 6e4);
   }
   mapInit();
 })();
