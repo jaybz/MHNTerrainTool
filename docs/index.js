@@ -1118,12 +1118,24 @@
 
   // src/index.jsx
   var s2 = require_s2_cell_draw();
-  var localStorageVersion = 1;
   var colorOrder = ["#ff9900", "#009933", "#cc00ff"];
   var knownCells = {};
   var polyList = [];
-  var dataVersion = localStorageVersion + "." + colorOrder.length;
+  var dataMigrations = [dataMigrationOldToV1];
+  var dataVersion = dataMigrations.length;
   var map = L.map("map").setView([0, 0], 13);
+  function dataMigrationOldToV1(versionedData) {
+    if (versionedData == null)
+      return versionedData;
+    var version = versionedData.version;
+    var cells = versionedData.cells;
+    if (version === 0) {
+      versionedData.version++;
+    } else {
+      return versionedData;
+    }
+    return versionedData;
+  }
   function showCurrentLocation() {
     if (map) {
       navigator.geolocation.getCurrentPosition(moveMapView);
@@ -1169,9 +1181,28 @@
     return color;
   }
   function getData() {
-    if (!localStorage.knownCells || !localStorage.dataVersion || localStorage.dataVersion != dataVersion) {
+    if (!localStorage.knownCells || !localStorage.dataVersion) {
       saveData();
-      alert("Application Data Initialized");
+    } else if (localStorage.dataVersion != dataVersion) {
+      var currentDataVersion = 0;
+      if (localStorage.dataVersion != "1.3") {
+        currentDataVersion = localStorage.dataVersion;
+      }
+      var versionedData = {
+        version: currentDataVersion,
+        cells: JSON.parse(localStorage.knownCells, parseKnownCells)
+      };
+      for (; currentDataVersion < dataVersion; currentDataVersion++) {
+        versionedData = dataMigrations[currentDataVersion](versionedData);
+      }
+      if (versionedData != null && versionedData.version === dataVersion) {
+        knownCells = versionedData.cells;
+        alert("WARNING: Application data was converted to most recent version. The conversion may have errors.");
+      } else {
+        knownCells = {};
+        alert("ERROR: Old application data could not be converted to the most recent version. Data was cleared instead.");
+      }
+      saveData();
     } else {
       knownCells = JSON.parse(localStorage.knownCells, parseKnownCells);
     }
