@@ -5,6 +5,7 @@ const colorOrder = ['#ff9900', '#009933', '#cc00ff'];
 var knownCells = {};
 var polyList = [];
 const dataVersion = localStorageVersion + '.' + colorOrder.length;
+const map = L.map('map').setView([0, 0], 13);
 
 function showCurrentLocation() {
     if (map) {
@@ -93,14 +94,7 @@ function parseKnownCells(key, value) {
     }
 }
 
-getData();
-
-var map = L.map('map').setView([0, 0], 13);
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-}).addTo(map);
-
-map.on('moveend', function() { 
+function mapMove() {
     bounds = map.getBounds();
     const cells = s2.createPolygonListFromBounds({
         bounds: [[bounds._southWest.lng, bounds._southWest.lat], [bounds._northEast.lng, bounds._northEast.lat]],
@@ -155,6 +149,23 @@ map.on('moveend', function() {
             });
         }
     }
-});
+}
 
-showCurrentLocation();
+function mapInit() {
+    getData();
+
+    // map layers
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+    
+    // map controls
+    L.control.locate({drawCircle: false}).addTo(map);
+
+    // map events
+    map.on('moveend', mapMove);
+    
+    showCurrentLocation();
+}
+
+mapInit();
