@@ -1,6 +1,7 @@
 const s2 = require('s2-cell-draw');
 const localStorageKey = 'MHNTerrainTool';
 const localStorageVersion = 1;
+const appVersion = 0.6;
 const colorOrder = ['#ff9900', '#009933', '#cc00ff'];
 var knownCells = {};
 var polyList = [];
@@ -9,6 +10,21 @@ const dataVersion = dataMigrations.length;
 const map = L.map('map').setView([0, 0], 13);
 
 var timerId = null;
+
+L.Control.Watermark = L.Control.extend({
+    onAdd: function(map) {
+        var text = L.DomUtil.create('span');
+
+        text.innerHTML = 'MHNTerrainTool v' + appVersion + ', data version: ' + localStorageVersion;
+
+        return text;
+    },
+
+    onRemove: function(map) {}
+});
+L.control.watermark = function(opts) {
+    return new L.Control.Watermark(opts);
+}
 
 function dataMigrationOldToV1(versionedData) {
     if(versionedData == null) return versionedData;
@@ -236,6 +252,9 @@ function mapInit() {
         iconElementTag: 'i',
         clickBehavior: {inView: 'stop', outOfView: 'setView', inViewNotFollowing: 'setView'}
     }).addTo(map);
+
+    // version watermark
+    L.control.watermark({ position: 'bottomleft' }).addTo(map);
 
     // map events
     map.on('moveend', mapMove);

@@ -1118,6 +1118,8 @@
 
   // src/index.js
   var s2 = require_s2_cell_draw();
+  var localStorageVersion = 1;
+  var appVersion = 0.6;
   var colorOrder = ["#ff9900", "#009933", "#cc00ff"];
   var knownCells = {};
   var polyList = [];
@@ -1125,6 +1127,18 @@
   var dataVersion = dataMigrations.length;
   var map = L.map("map").setView([0, 0], 13);
   var timerId = null;
+  L.Control.Watermark = L.Control.extend({
+    onAdd: function(map2) {
+      var text = L.DomUtil.create("span");
+      text.innerHTML = "MHNTerrainTool v" + appVersion + ", data version: " + localStorageVersion;
+      return text;
+    },
+    onRemove: function(map2) {
+    }
+  });
+  L.control.watermark = function(opts) {
+    return new L.Control.Watermark(opts);
+  };
   function dataMigrationOldToV1(versionedData) {
     if (versionedData == null)
       return versionedData;
@@ -1312,6 +1326,7 @@
       iconElementTag: "i",
       clickBehavior: { inView: "stop", outOfView: "setView", inViewNotFollowing: "setView" }
     }).addTo(map);
+    L.control.watermark({ position: "bottomleft" }).addTo(map);
     map.on("moveend", mapMove);
     showCurrentLocation();
     timerId = setInterval(recolorCellsInterval, 6e4);
