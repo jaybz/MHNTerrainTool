@@ -100,10 +100,10 @@ function getData() {
 
         if (versionedData != null && versionedData.version === dataVersion) {
             knownCells = versionedData.cells;
-            alert('WARNING: Application data was converted to most recent version. The conversion may have errors.');
+            alert('WARNING: Old map data was converted to most recent version. The conversion may have errors.');
         } else {
             knownCells = {};
-            alert('ERROR: Old application data could not be converted to the most recent version. Data was cleared instead.');
+            alert('ERROR: Old map data could not be converted to the most recent version. Data was cleared instead.');
         }
 
         saveData();
