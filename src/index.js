@@ -27,7 +27,7 @@ function dataMigrationOldToV1(versionedData) {
 
 function showCurrentLocation() {
     if (map) {
-        navigator.geolocation.getCurrentPosition(moveMapView)
+        navigator.geolocation.getCurrentPosition(moveMapView);
     }
 }
 
@@ -228,7 +228,14 @@ function mapInit() {
     }).addTo(map);
     
     // map controls
-    L.control.locate({drawCircle: false, keepCurrentZoomLevel: true}).addTo(map);
+    L.control.locate({
+        drawCircle: false,
+        keepCurrentZoomLevel: true,
+        icon: 'fa fa-map-marker',
+        iconLoading: 'fa fa-spinner fa-pulse fa-fw',
+        iconElementTag: 'i',
+        clickBehavior: {inView: 'stop', outOfView: 'setView', inViewNotFollowing: 'setView'}
+    }).addTo(map);
 
     // map events
     map.on('moveend', mapMove);

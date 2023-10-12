@@ -1304,7 +1304,14 @@
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
-    L.control.locate({ drawCircle: false, keepCurrentZoomLevel: true }).addTo(map);
+    L.control.locate({
+      drawCircle: false,
+      keepCurrentZoomLevel: true,
+      icon: "fa fa-map-marker",
+      iconLoading: "fa fa-spinner fa-pulse fa-fw",
+      iconElementTag: "i",
+      clickBehavior: { inView: "stop", outOfView: "setView", inViewNotFollowing: "setView" }
+    }).addTo(map);
     map.on("moveend", mapMove);
     showCurrentLocation();
     timerId = setInterval(recolorCellsInterval, 6e4);
