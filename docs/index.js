@@ -1148,17 +1148,21 @@
     if (i2 in polyList) {
       poly = polyList[i2];
       if (i2 in knownCells) {
-        poly.setStyle({ fillOpacity: 0.2, fillColor: getTerrainColor(i2) });
+        poly.setStyle({ fillOpacity: 0.4, fillColor: getTerrainColor(i2) });
       } else {
         poly.setStyle({ fillOpacity: 0 });
       }
     }
   }
+  function getDateDifference(date1, date2) {
+    const oneDay = 24 * 60 * 60 * 1e3;
+    return Math.floor((date1 - date2) / oneDay);
+  }
   function getTerrainColor(s2key) {
     var color = "black";
     if (s2key in knownCells) {
       var today = getCurrentUTCDate();
-      var interval = (today.getDate() - knownCells[s2key].origin.getDate()) % colorOrder.length;
+      var interval = getDateDifference(today, knownCells[s2key].origin) % colorOrder.length;
       color = colorOrder[interval];
     }
     return color;
@@ -1208,11 +1212,13 @@
         recolorCell(cells[i2]["S2Key"]);
         poly.on("click", function(e) {
           var s2key = cells[i2]["S2Key"];
+          var today = getCurrentUTCDate();
           if (s2key in knownCells === false) {
-            knownCells[s2key] = { origin: getCurrentUTCDate(), order: 1 };
+            knownCells[s2key] = { origin: today, order: 1 };
           } else {
-            var interval = (knownCells[s2key].order + colorOrder.length * 3 + getCurrentUTCDate().getDate() - knownCells[s2key].origin.getDate()) % colorOrder.length;
-            knownCells[s2key].origin.setDate(getCurrentUTCDate().getDate() - interval);
+            var interval = (knownCells[s2key].order + colorOrder.length * 3 + getDateDifference(today, knownCells[s2key].origin)) % colorOrder.length;
+            knownCells[s2key].origin = today;
+            knownCells[s2key].origin.setDate(today.getDate() - interval);
           }
           saveData();
           recolorCell(s2key);
