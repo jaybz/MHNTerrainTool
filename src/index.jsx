@@ -96,6 +96,7 @@ function getData() {
 
         for (; currentDataVersion < dataVersion; currentDataVersion++) {
             versionedData = dataMigrations[currentDataVersion](versionedData);
+            if (versionedData == null) break;
         }
 
         if (versionedData != null && versionedData.version === dataVersion) {
