@@ -1120,7 +1120,7 @@
   var s2 = require_s2_cell_draw();
   var appName = "MHNTerrainTool";
   var localStorageVersion = 1;
-  var appVersion = 0.7;
+  var appVersion = "0.7.1";
   var colorOrder = ["#ff9900", "#009933", "#cc00ff"];
   var knownCells = {};
   var polyList = [];
@@ -1354,13 +1354,19 @@
             alert("ERROR: Imported data could not be parsed.");
           } else if (!abort) {
             var importCells = versionedData.cells;
+            var foundExisting = false;
             for (var i2 in importCells) {
               if (!(i2 in knownCells)) {
                 knownCells[i2] = importCells[i2];
+              } else {
+                foundExisting = true;
               }
             }
             saveData();
             recolorCells();
+            if (foundExisting) {
+              alert("At least one imported cell already exists in your data. Those cells were ignored in the import. None of your existing data was overwritten.");
+            }
           }
         },
         false

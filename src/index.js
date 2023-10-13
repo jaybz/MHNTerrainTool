@@ -1,7 +1,7 @@
 const s2 = require('s2-cell-draw');
 const appName = 'MHNTerrainTool';
 const localStorageVersion = 1;
-const appVersion = 0.7;
+const appVersion = '0.7.1';
 const colorOrder = ['#ff9900', '#009933', '#cc00ff'];
 var knownCells = {};
 var polyList = [];
@@ -282,13 +282,19 @@ function mapInit() {
                     alert('ERROR: Imported data could not be parsed.');
                 } else if (!abort) {
                     var importCells = versionedData.cells;
+                    var foundExisting = false;
                     for (var i in importCells) {
                         if (!(i in knownCells)) {
                             knownCells[i] = importCells[i];
+                        } else {
+                            foundExisting = true;
                         }
                     }
                     saveData();
                     recolorCells();
+                    if (foundExisting) {
+                        alert('At least one imported cell already exists in your data. Those cells were ignored in the import. None of your existing data was overwritten.');
+                    }
                 }        
             },
             false);
