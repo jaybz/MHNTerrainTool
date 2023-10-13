@@ -1,7 +1,7 @@
 const s2 = require('s2-cell-draw');
 const appName = 'MHNTerrainTool';
 const localStorageVersion = 1;
-const appVersion = '0.7.1';
+const appVersion = '0.7.2';
 const colorOrder = ['#ff9900', '#009933', '#cc00ff'];
 var knownCells = {};
 var polyList = [];
@@ -98,6 +98,9 @@ function getTerrainColor(s2key) {
     if (s2key in knownCells) {
         var today = getCurrentUTCDate();
         var interval = getDateDifference(today, knownCells[s2key].origin) % colorOrder.length;
+        if (knownCells[s2key].order < 0) {
+            interval = (colorOrder.length - 1) - interval;
+        }
         color = colorOrder[interval];
     }
     return color;
@@ -193,7 +196,7 @@ function mapMove() {
                 if (s2key in knownCells === false) {
                     knownCells[s2key] = {origin: today, order: 1};
                 } else {
-                    var interval = ((knownCells[s2key].order + (colorOrder.length * 3)) + getDateDifference(today, knownCells[s2key].origin)) % colorOrder.length;
+                    var interval = (1 + getDateDifference(today, knownCells[s2key].origin)) % colorOrder.length;
                     knownCells[s2key].origin = today;
                     knownCells[s2key].origin.setDate(today.getDate() - interval);
                 }
@@ -222,12 +225,19 @@ function mapMove() {
                             buttonAction: '<i class="fa fa-refresh" aria-hidden="true" title="Reverse Terrain Order"></i>',
                             action: function() {
                                 var s2key = cells[i]["S2Key"];
+                                var today = getCurrentUTCDate();
                                 if (s2key in knownCells) {
                                     if (knownCells[s2key].order > 0) {
                                         knownCells[s2key].order = -1;
                                     } else {
                                         knownCells[s2key].order = 1;
                                     }
+                                    var interval = (colorOrder.length - 1) - (getDateDifference(today, knownCells[s2key].origin) % colorOrder.length);
+                                    knownCells[s2key].origin = today;
+                                    knownCells[s2key].origin.setDate(today.getDate() - interval);
+                                    console.log(s2key);
+                                    console.log(knownCells[s2key].origin)
+                                    console.log(knownCells[s2key].order)
                                     saveData();
                                     recolorCell(s2key);
                                 }

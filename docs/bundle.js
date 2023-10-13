@@ -1120,7 +1120,7 @@
   var s2 = require_s2_cell_draw();
   var appName = "MHNTerrainTool";
   var localStorageVersion = 1;
-  var appVersion = "0.7.1";
+  var appVersion = "0.7.2";
   var colorOrder = ["#ff9900", "#009933", "#cc00ff"];
   var knownCells = {};
   var polyList = [];
@@ -1201,6 +1201,9 @@
     if (s2key in knownCells) {
       var today = getCurrentUTCDate();
       var interval = getDateDifference(today, knownCells[s2key].origin) % colorOrder.length;
+      if (knownCells[s2key].order < 0) {
+        interval = colorOrder.length - 1 - interval;
+      }
       color = colorOrder[interval];
     }
     return color;
@@ -1276,7 +1279,7 @@
           if (s2key in knownCells === false) {
             knownCells[s2key] = { origin: today, order: 1 };
           } else {
-            var interval = (knownCells[s2key].order + colorOrder.length * 3 + getDateDifference(today, knownCells[s2key].origin)) % colorOrder.length;
+            var interval = (1 + getDateDifference(today, knownCells[s2key].origin)) % colorOrder.length;
             knownCells[s2key].origin = today;
             knownCells[s2key].origin.setDate(today.getDate() - interval);
           }
@@ -1302,12 +1305,19 @@
                 buttonAction: '<i class="fa fa-refresh" aria-hidden="true" title="Reverse Terrain Order"></i>',
                 action: function() {
                   var s2key2 = cells[i2]["S2Key"];
+                  var today = getCurrentUTCDate();
                   if (s2key2 in knownCells) {
                     if (knownCells[s2key2].order > 0) {
                       knownCells[s2key2].order = -1;
                     } else {
                       knownCells[s2key2].order = 1;
                     }
+                    var interval = colorOrder.length - 1 - getDateDifference(today, knownCells[s2key2].origin) % colorOrder.length;
+                    knownCells[s2key2].origin = today;
+                    knownCells[s2key2].origin.setDate(today.getDate() - interval);
+                    console.log(s2key2);
+                    console.log(knownCells[s2key2].origin);
+                    console.log(knownCells[s2key2].order);
                     saveData();
                     recolorCell(s2key2);
                   }
