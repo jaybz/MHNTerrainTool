@@ -1,5 +1,5 @@
 const s2 = require('s2-cell-draw');
-const localStorageKey = 'MHNTerrainTool';
+const appName = 'MHNTerrainTool';
 const localStorageVersion = 1;
 const appVersion = 0.6;
 const colorOrder = ['#ff9900', '#009933', '#cc00ff'];
@@ -103,24 +103,29 @@ function getTerrainColor(s2key) {
     return color;
 }
 
+function migrateVersionedData(versionedData) {
+    if (!versionedData) return null;
+    var currentVersion = versionedData.version;
+    for (; currentDataVersion < dataVersion; currentDataVersion++) {
+        versionedData = dataMigrations[currentDataVersion](versionedData);
+        if (versionedData == null) break;
+    }
+    return versionedData;
+}
+
 function getData() {
-    if (!localStorage.knownCells || !localStorage.dataVersion) {
+    if (!localStorage.knownCells || !localStorage.dataVersion) { // no existing data, initialize app
         saveData();
-    } else if (localStorage.dataVersion != dataVersion) {
+    } else if (localStorage.dataVersion != dataVersion) { // old data found, migrate to latest version
         var currentDataVersion = 0;
         if (localStorage.dataVersion != '1.3') {
             currentDataVersion = localStorage.dataVersion;
         }
 
-        var versionedData = {
+        var versionedData = migrateVersionedData({
             version: currentDataVersion,
             cells: JSON.parse(localStorage.knownCells, parseKnownCells)
-        };
-
-        for (; currentDataVersion < dataVersion; currentDataVersion++) {
-            versionedData = dataMigrations[currentDataVersion](versionedData);
-            if (versionedData == null) break;
-        }
+        });
 
         if (versionedData != null && versionedData.version === dataVersion) {
             knownCells = versionedData.cells;
@@ -254,6 +259,42 @@ function mapInit() {
         clickBehavior: {inView: 'stop', outOfView: 'setView', inViewNotFollowing: 'setView'}
     }).addTo(map);
 
+    var fileUpload = L.DomUtil.get('fileupload');
+    L.DomEvent.on(fileUpload, 'change', function(e) {
+        const file = e.target.files[0];
+        var reader = new FileReader();
+        reader.addEventListener(
+            'load',
+            () => {
+                var versionedData = JSON.parse(reader.result, parseKnownCells);
+                var abort = false;
+                var importVersion = versionedData.version;
+
+                if (versionedData != null && versionedData.version != dataVersion) {
+                    if (confirm('WARNING: Imported file is using an old data version and might not be imported correctly. Do you want to continue?')) {
+                        versionedData = migrateVersionedData(versionedData);
+                    } else {
+                        abort = true;
+                    }
+                } 
+                
+                if (versionedData == null || versionedData.version != dataVersion) {
+                    alert('ERROR: Imported data could not be parsed.');
+                } else if (!abort) {
+                    var importCells = versionedData.cells;
+                    for (var i in importCells) {
+                        if (!(i in knownCells)) {
+                            knownCells[i] = importCells[i];
+                        }
+                    }
+                    saveData();
+                    recolorCells();
+                }        
+            },
+            false);
+        reader.readAsText(file);
+        fileUpload.value = '';
+    });
     L.easyBar([
         L.easyButton({
             id: 'export-button',
@@ -261,7 +302,19 @@ function mapInit() {
                 icon: 'fa-download',
                 title: 'Export Data',
                 onClick: function(btn, map){
-                    alert('Data export coming soon');
+                    const exportFileName = appName + '-' + appVersion + '-' + localStorage.dataVersion + '-export.json';
+
+                    var versionedData = {
+                        version: localStorage.dataVersion,
+                        cells: JSON.parse(localStorage.knownCells, parseKnownCells)
+                    };
+                    var serializedData = JSON.stringify(versionedData);
+            
+                    var file = new Blob([serializedData], {type: 'application/json'});
+                    var a = document.createElement('a');
+                    a.href = URL.createObjectURL(file);
+                    a.download = exportFileName;
+                    a.click();
                 }
             }]
         }),
@@ -270,8 +323,8 @@ function mapInit() {
             states: [{
                 icon: 'fa-upload',
                 title: 'Import Data',
-                onClick: function(btn, map){
-                    alert('Data import coming soon');
+                onClick: function(btn, map) {
+                    fileUpload.click();
                 }
             }]
         }),
@@ -281,8 +334,11 @@ function mapInit() {
                 icon: 'fa-trash',
                 title: 'Clear Data Data',
                 onClick: function(btn, map){
-                    var result = confirm('This will clear all cells of terrain. Are you sure you want to do this?');
-                    if (result) alert('Feature not yet available.');
+                    if (confirm('This will clear all cells of terrain. Are you sure you want to do this?')) {
+                        knownCells = {};
+                        saveData();
+                        recolorCells();
+                    }
                 }
             }]
         })

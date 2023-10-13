@@ -1118,6 +1118,7 @@
 
   // src/index.js
   var s2 = require_s2_cell_draw();
+  var appName = "MHNTerrainTool";
   var localStorageVersion = 1;
   var appVersion = 0.6;
   var colorOrder = ["#ff9900", "#009933", "#cc00ff"];
@@ -1204,23 +1205,29 @@
     }
     return color;
   }
+  function migrateVersionedData(versionedData) {
+    if (!versionedData)
+      return null;
+    var currentVersion = versionedData.version;
+    for (; currentDataVersion < dataVersion; currentDataVersion++) {
+      versionedData = dataMigrations[currentDataVersion](versionedData);
+      if (versionedData == null)
+        break;
+    }
+    return versionedData;
+  }
   function getData() {
     if (!localStorage.knownCells || !localStorage.dataVersion) {
       saveData();
     } else if (localStorage.dataVersion != dataVersion) {
-      var currentDataVersion = 0;
+      var currentDataVersion2 = 0;
       if (localStorage.dataVersion != "1.3") {
-        currentDataVersion = localStorage.dataVersion;
+        currentDataVersion2 = localStorage.dataVersion;
       }
-      var versionedData = {
-        version: currentDataVersion,
+      var versionedData = migrateVersionedData({
+        version: currentDataVersion2,
         cells: JSON.parse(localStorage.knownCells, parseKnownCells)
-      };
-      for (; currentDataVersion < dataVersion; currentDataVersion++) {
-        versionedData = dataMigrations[currentDataVersion](versionedData);
-        if (versionedData == null)
-          break;
-      }
+      });
       if (versionedData != null && versionedData.version === dataVersion) {
         knownCells = versionedData.cells;
         alert("WARNING: Old map data was converted to most recent version. The conversion may have errors.");
@@ -1326,6 +1333,41 @@
       iconElementTag: "i",
       clickBehavior: { inView: "stop", outOfView: "setView", inViewNotFollowing: "setView" }
     }).addTo(map);
+    var fileUpload = L.DomUtil.get("fileupload");
+    L.DomEvent.on(fileUpload, "change", function(e) {
+      const file = e.target.files[0];
+      var reader = new FileReader();
+      reader.addEventListener(
+        "load",
+        () => {
+          var versionedData = JSON.parse(reader.result, parseKnownCells);
+          var abort = false;
+          var importVersion = versionedData.version;
+          if (versionedData != null && versionedData.version != dataVersion) {
+            if (confirm("WARNING: Imported file is using an old data version and might not be imported correctly. Do you want to continue?")) {
+              versionedData = migrateVersionedData(versionedData);
+            } else {
+              abort = true;
+            }
+          }
+          if (versionedData == null || versionedData.version != dataVersion) {
+            alert("ERROR: Imported data could not be parsed.");
+          } else if (!abort) {
+            var importCells = versionedData.cells;
+            for (var i2 in importCells) {
+              if (!(i2 in knownCells)) {
+                knownCells[i2] = importCells[i2];
+              }
+            }
+            saveData();
+            recolorCells();
+          }
+        },
+        false
+      );
+      reader.readAsText(file);
+      fileUpload.value = "";
+    });
     L.easyBar([
       L.easyButton({
         id: "export-button",
@@ -1333,7 +1375,17 @@
           icon: "fa-download",
           title: "Export Data",
           onClick: function(btn, map2) {
-            alert("Data export coming soon");
+            const exportFileName = appName + "-" + appVersion + "-" + localStorage.dataVersion + "-export.json";
+            var versionedData = {
+              version: localStorage.dataVersion,
+              cells: JSON.parse(localStorage.knownCells, parseKnownCells)
+            };
+            var serializedData = JSON.stringify(versionedData);
+            var file = new Blob([serializedData], { type: "application/json" });
+            var a = document.createElement("a");
+            a.href = URL.createObjectURL(file);
+            a.download = exportFileName;
+            a.click();
           }
         }]
       }),
@@ -1343,7 +1395,7 @@
           icon: "fa-upload",
           title: "Import Data",
           onClick: function(btn, map2) {
-            alert("Data import coming soon");
+            fileUpload.click();
           }
         }]
       }),
@@ -1353,9 +1405,11 @@
           icon: "fa-trash",
           title: "Clear Data Data",
           onClick: function(btn, map2) {
-            var result = confirm("This will clear all cells of terrain. Are you sure you want to do this?");
-            if (result)
-              alert("Feature not yet available.");
+            if (confirm("This will clear all cells of terrain. Are you sure you want to do this?")) {
+              knownCells = {};
+              saveData();
+              recolorCells();
+            }
           }
         }]
       })
