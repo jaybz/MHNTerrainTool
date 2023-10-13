@@ -1120,7 +1120,7 @@
   var s2 = require_s2_cell_draw();
   var appName = "MHNTerrainTool";
   var localStorageVersion = 1;
-  var appVersion = "0.7.3";
+  var appVersion = "0.7.4";
   var colorOrder = ["#ff9900", "#009933", "#cc00ff"];
   var knownCells = {};
   var polyList = [];
@@ -1430,7 +1430,7 @@
         }]
       })
     ]).addTo(map);
-    L.control.watermark({ position: "bottomleft" }).addTo(map);
+    L.control.watermark({ position: "topright" }).addTo(map);
     map.on("moveend", mapMove);
     showCurrentLocation();
     timerId = setInterval(recolorCellsInterval, 6e4);

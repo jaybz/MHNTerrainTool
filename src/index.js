@@ -1,7 +1,7 @@
 const s2 = require('s2-cell-draw');
 const appName = 'MHNTerrainTool';
 const localStorageVersion = 1;
-const appVersion = '0.7.3';
+const appVersion = '0.7.4';
 const colorOrder = ['#ff9900', '#009933', '#cc00ff'];
 var knownCells = {};
 var polyList = [];
@@ -361,7 +361,7 @@ function mapInit() {
     ]).addTo(map);
 
     // version watermark
-    L.control.watermark({ position: 'bottomleft' }).addTo(map);
+    L.control.watermark({ position: 'topright' }).addTo(map);
 
     // map events
     map.on('moveend', mapMove);
