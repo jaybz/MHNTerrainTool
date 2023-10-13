@@ -1,7 +1,7 @@
 const s2 = require('s2-cell-draw');
 const appName = 'MHNTerrainTool';
 const localStorageVersion = 1;
-const appVersion = '0.7.2';
+const appVersion = '0.7.3';
 const colorOrder = ['#ff9900', '#009933', '#cc00ff'];
 var knownCells = {};
 var polyList = [];
