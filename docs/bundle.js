@@ -1120,7 +1120,7 @@
   var s2 = require_s2_cell_draw();
   var appName = "MHNTerrainTool";
   var localStorageVersion = 1;
-  var appVersion = "0.7.6";
+  var appVersion = "0.7.7";
   var colorOrder = ["#ff9900", "#009933", "#cc00ff"];
   var knownCells = {};
   var polyList = [];
@@ -1275,9 +1275,13 @@
         recolorCell(cells[i2]["S2Key"]);
         poly.on("click", function(e) {
           var s2key = cells[i2]["S2Key"];
+          var defaultOrder = cells[i2].center[1] > 0 ? -1 : 1;
           var today = getCurrentUTCDate();
+          var twoDaysAgo = getCurrentUTCDate();
+          twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
           if (s2key in knownCells === false) {
-            knownCells[s2key] = { origin: today, order: -1 };
+            knownCells[s2key] = { origin: defaultOrder > 0 ? today : twoDaysAgo, order: defaultOrder };
+            console.log(defaultOrder);
           } else {
             var interval = (1 + getDateDifference(today, knownCells[s2key].origin)) % colorOrder.length;
             knownCells[s2key].origin = today;
