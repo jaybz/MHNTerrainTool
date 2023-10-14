@@ -1,7 +1,7 @@
 const s2 = require('s2-cell-draw');
 const appName = 'MHNTerrainTool';
 const localStorageVersion = 1;
-const appVersion = '0.7.5';
+const appVersion = '0.7.6';
 const colorOrder = ['#ff9900', '#009933', '#cc00ff'];
 var knownCells = {};
 var polyList = [];
@@ -167,15 +167,14 @@ function parseKnownCells(key, value) {
 
 function mapMove() {
     bounds = map.getBounds();
-    const cells = s2.createPolygonListFromBounds({
-        bounds: [[bounds._southWest.lng, bounds._southWest.lat], [bounds._northEast.lng, bounds._northEast.lat]],
-        level: 14
-    });
-
     clearCells();
 
-    if (cells.length <= 5000) {
-        //var polygonList = [];
+    if (map.getZoom() >= 12) {
+        const cells = s2.createPolygonListFromBounds({
+            bounds: [[bounds._southWest.lng, bounds._southWest.lat], [bounds._northEast.lng, bounds._northEast.lat]],
+            level: 14
+        });
+    
         for (let i = 0; i < cells.length; i++) {
             var box = cells[i];
             polygon = [
