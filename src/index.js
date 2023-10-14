@@ -194,7 +194,7 @@ function mapMove() {
                 var today = getCurrentUTCDate();
 
                 if (s2key in knownCells === false) {
-                    knownCells[s2key] = {origin: today, order: 1};
+                    knownCells[s2key] = {origin: today, order: -1};
                 } else {
                     var interval = (1 + getDateDifference(today, knownCells[s2key].origin)) % colorOrder.length;
                     knownCells[s2key].origin = today;
