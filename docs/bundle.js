@@ -1120,7 +1120,7 @@
   var s2 = require_s2_cell_draw();
   var appName = "MHNTerrainTool";
   var localStorageVersion = 1;
-  var appVersion = "0.7.4";
+  var appVersion = "0.7.5";
   var colorOrder = ["#ff9900", "#009933", "#cc00ff"];
   var knownCells = {};
   var polyList = [];
