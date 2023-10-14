@@ -1,13 +1,14 @@
 const s2 = require('s2-cell-draw');
 const appName = 'MHNTerrainTool';
 const localStorageVersion = 1;
-const appVersion = '0.7.7';
+const appVersion = '0.7.8';
 const colorOrder = ['#ff9900', '#009933', '#cc00ff'];
 var knownCells = {};
 var polyList = [];
 const dataMigrations = [dataMigrationOldToV1];
 const dataVersion = dataMigrations.length;
 const map = L.map('map').setView([0, 0], 13);
+const searchProvider = new GeoSearch.OpenStreetMapProvider();
 
 var timerId = null;
 
@@ -197,7 +198,6 @@ function mapMove() {
 
                 if (s2key in knownCells === false) {
                     knownCells[s2key] = {origin: defaultOrder > 0 ? today : twoDaysAgo, order: defaultOrder};
-                    console.log(defaultOrder);
                 } else {
                     var interval = (1 + getDateDifference(today, knownCells[s2key].origin)) % colorOrder.length;
                     knownCells[s2key].origin = today;
@@ -272,6 +272,28 @@ function mapInit() {
         clickBehavior: {inView: 'stop', outOfView: 'setView', inViewNotFollowing: 'setView'}
     }).addTo(map);
 
+    const searchControl = new GeoSearch.GeoSearchControl({
+        position: 'topleft',
+        provider: searchProvider,
+        showMarker: true,
+        marker: {
+            // optional: L.Marker    - default L.Icon.Default
+            icon: new L.Icon.Default(),
+            draggable: false,
+        },
+        showPopup: false,
+        autoClose: true,
+        autoComplete: true,
+        retainZoomLevel: true,
+        animateZoom: true,
+        maxSuggestions: 5,
+        keepResult: true,
+        maxMarkers: 1,
+        style: 'button'
+      });
+    map.addControl(searchControl);
+
+    // data management controls
     var fileUpload = L.DomUtil.get('fileupload');
     L.DomEvent.on(fileUpload, 'change', function(e) {
         const file = e.target.files[0];
