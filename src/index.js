@@ -25,19 +25,19 @@ L.Control.Watermark = L.Control.extend({
 L.control.watermark = function(opts) {
     return new L.Control.Watermark(opts);
 }
-/*
+
 function s2IdToNumericToken(cellId) {
     return s2TokenToInt(s2IdToToken(cellId));
 }
 
 function s2IdToToken(cellId) {
-    return cellId.toString(16).replace(/0+$/, '');
+    return parseInt(cellId).toString(16).replace(/0+$/, '');
 }
 
 function s2TokenToInt(token) {
     return parseInt(token, 16);
 }
-*/
+
 function s2GetVisibleCells(bounds) {
     var center = bounds.getCenter();
     var origin = getCellFromPoint(center);
@@ -135,7 +135,7 @@ function recolorCell(i) {
 
 function getTerrainColor(i) {
     var dayCount = ((getCurrentUTCDate().getTime() / 1000) / (24 * 60 * 60) + 1) % colorOrder.length;
-    var seedIndex = i % colorOrder.length;
+    var seedIndex = s2IdToNumericToken(i) % colorOrder.length;
     var colorIndex = (seedIndex + dayCount) % colorOrder.length;
 
     return colorOrder[colorIndex];
@@ -145,13 +145,24 @@ function mapMove() {
     bounds = map.getBounds();
     clearCells();
 
-    if (map.getZoom() >= 12) {
+    if (map.getZoom() >= 14) {
         const cells = s2GetVisibleCells(bounds);
 
         var tmp = s2GetVisibleCells(bounds);
-
+        console.log(map.getZoom());
         cells.forEach((cell) => {
             visiblePolygons[cell.id] = cell.polygon;
+            /*cell.polygon.on('click', (e) => {
+                var id = cell.id;
+                var numToken = s2IdToNumericToken(id);
+                var hexToken = s2IdToToken(id);
+
+                console.log(id % 3);
+                console.log(s2IdToToken(id));
+                console.log(s2IdToNumericToken(id) % 3);
+
+                alert(id + '\n' + numToken + '\n' + hexToken);
+            });*/
             cell.polygon.addTo(map);
             recolorCell(cell.id);
         });
