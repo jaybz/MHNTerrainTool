@@ -3,7 +3,7 @@
     "esbuild": "0.19.4"
   },
   "scripts": {
-    "esbuild-minify": "esbuild ./src/index.js --minify --bundle --outfile=./src/bundle.js",
+    "esbuild-minify": "esbuild ./src/index.js --minify --drop:console --bundle --outfile=./src/bundle.js",
     "esbuild": "esbuild ./src/index.js --bundle --outfile=./src/bundle.js",
     "start": "npm run esbuild && http-server src/"
   },
