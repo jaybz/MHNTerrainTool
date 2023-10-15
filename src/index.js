@@ -10,7 +10,7 @@ var visiblePolygons = {};
 const map = L.map('map').setView([0, 0], 13);
 const searchProvider = new GeoSearch.OpenStreetMapProvider();
 const terrainCellLevel = 14;
-const terrainOpacity = 0.2;
+const terrainOpacity = 0.3;
 
 var timerId = null;
 
