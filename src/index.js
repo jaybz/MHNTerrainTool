@@ -1,13 +1,16 @@
 var S2 = require('s2-geometry').S2;
 const appName = 'MHNTerrainTool';
-const appVersion = '0.8.3';
+const appVersion = '0.8.4';
 const terrainColor = ['#009933', '#ff9900', '#3300ff'];
 const terrainNames = ['Forest', 'Desert', 'Swamp'];
 const terrainIcons = ['fa-tree', 'fa-area-chart', 'fa-tint'];
 const terrainRotation = [];
 terrainColor.forEach((item, index) => { terrainRotation.push(index)});
 var visiblePolygons = {};
-const map = L.map('map').setView([0, 0], 13);
+const initLocation = L.Permalink.getMapLocation(-1, [37.7955742, -122.3958959]);
+const defaultZoom = 15;
+const map = L.map('map', {center: initLocation.center, zoom: initLocation.zoom < 0 ? defaultZoom : initLocation.zoom});
+L.Permalink.setup(map);
 const searchProvider = new GeoSearch.OpenStreetMapProvider();
 const terrainCellLevel = 14;
 const terrainOpacity = 0.3;
@@ -98,14 +101,18 @@ function isCellVisible(bounds, cell) {
 
 function showCurrentLocation() {
     if (map) {
-        navigator.geolocation.getCurrentPosition(moveMapView);
+        navigator.geolocation.getCurrentPosition(moveMapView, setDefaultZoom);
     }
 }
 
 function moveMapView(position) {
     if (map) {
-        map.setView([position.coords.latitude, position.coords.longitude], 15);
+        map.setView([position.coords.latitude, position.coords.longitude]);
     }
+}
+
+function setDefaultZoom(error) {
+    map.setZoom(defaultZoom);
 }
 
 function clearCells() {
@@ -151,11 +158,9 @@ function mapMove() {
 
     if (map.getZoom() >= 14) {
         const cells = s2GetVisibleCells(bounds);
-
-        var tmp = s2GetVisibleCells(bounds);
-        console.log(map.getZoom());
         cells.forEach((cell) => {
             visiblePolygons[cell.id] = cell.polygon;
+
             /*cell.polygon.on('click', (e) => {
                 var id = cell.id;
                 var numToken = s2IdToNumericToken(id);
@@ -232,7 +237,6 @@ function mapInit() {
         });
         button.state('terrain' + (buttonState + 1));
 
-        console.log(button);
         terrainButtons.push(button);
     });
 
@@ -245,7 +249,16 @@ function mapInit() {
     // map events
     map.on('moveend', mapMove);
     
-    showCurrentLocation();
+    if(initLocation.zoom == -1)
+        showCurrentLocation();
+    else
+        map.setZoom(initLocation.zoom);
+
+    window.addEventListener('hashchange', function() {
+        const newLocation = L.Permalink.getMapLocation();
+        map.setView(newLocation.center, newLocation.zoom, {animate: true});
+    });
+
     timerId = setInterval(recolorCellsInterval, 60000);
 }
 
