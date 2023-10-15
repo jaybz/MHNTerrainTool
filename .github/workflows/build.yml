@@ -44,6 +44,8 @@ jobs:
           cache: ${{ steps.detect-package-manager.outputs.manager }}
       - name: Install dependencies
         run: npm install
+      - name: Git Fetch
+        run: git fetch
       - name: Create gh-pages directories
         run: mkdir -p gh-pages/dev
       - name: Build Development
