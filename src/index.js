@@ -221,7 +221,7 @@ function mapInit() {
                     stateName: 'terrain' + (index + 1),
                     icon: terrainIcons[index],
                     title: terrainNames[index],
-                    onClick: (btn, map) => {
+                    onClick: (btn) => {
                         buttonState = (buttonState + 1) % terrainColor.length;
                         btn.state('terrain' + (buttonState + 1));
                         terrainRotation[buttonIndex] = buttonState;
