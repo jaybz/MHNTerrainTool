@@ -1,6 +1,6 @@
 var S2 = require('s2-geometry').S2;
 const appName = 'MHNTerrainTool';
-const appVersion = '0.8.1';
+const appVersion = '0.8.2';
 const colorOrder = ['#009933', '#ff9900', '#5500ff'];
 var visiblePolygons = {};
 const map = L.map('map').setView([0, 0], 13);
