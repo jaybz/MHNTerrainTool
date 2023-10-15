@@ -29,7 +29,7 @@ on:
 
 jobs:
   # Single deploy job since we're just deploying
-  build:
+  publish:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -56,6 +56,6 @@ jobs:
         uses: actions/upload-pages-artifact@v2
         with:
           path: './gh-pages'
-      #- name: Deploy to GitHub Pages
-      #  id: deployment
-      #  uses: actions/deploy-pages@v2
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
