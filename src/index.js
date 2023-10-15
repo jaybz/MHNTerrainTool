@@ -1,8 +1,7 @@
 var S2 = require('s2-geometry').S2;
 const appName = 'MHNTerrainTool';
-const appVersion = '0.8.0';
+const appVersion = '0.8.1';
 const colorOrder = ['#009933', '#ff9900', '#5500ff'];
-var knownCells = [];
 var visiblePolygons = {};
 const map = L.map('map').setView([0, 0], 13);
 const searchProvider = new GeoSearch.OpenStreetMapProvider();
@@ -26,7 +25,7 @@ L.Control.Watermark = L.Control.extend({
 L.control.watermark = function(opts) {
     return new L.Control.Watermark(opts);
 }
-
+/*
 function s2IdToNumericToken(cellId) {
     return s2TokenToInt(s2IdToToken(cellId));
 }
@@ -38,7 +37,7 @@ function s2IdToToken(cellId) {
 function s2TokenToInt(token) {
     return parseInt(token, 16);
 }
-
+*/
 function s2GetVisibleCells(bounds) {
     var center = bounds.getCenter();
     var origin = getCellFromPoint(center);
@@ -134,16 +133,8 @@ function recolorCell(i) {
     }
 }
 
-function getDateDifference(date1, date2) {
-    const oneDay = 24 * 60 * 60 * 1000; // hours*minutes*seconds*milliseconds
-    return Math.floor((date1 - date2) / oneDay);
-}
-
 function getTerrainColor(i) {
-    var color = 'black';
-    var token = s2IdToNumericToken(i);
-
-    var dayCount = (getCurrentUTCDate().getTime() / 1000) / (24 * 60 * 60) + 1;
+    var dayCount = ((getCurrentUTCDate().getTime() / 1000) / (24 * 60 * 60) + 1) % colorOrder.length;
     var seedIndex = i % colorOrder.length;
     var colorIndex = (seedIndex + dayCount) % colorOrder.length;
 
