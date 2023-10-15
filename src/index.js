@@ -1,7 +1,11 @@
 var S2 = require('s2-geometry').S2;
 const appName = 'MHNTerrainTool';
 const appVersion = '0.8.3';
-const colorOrder = ['#009933', '#ff9900', '#5500ff'];
+const terrainColor = ['#009933', '#ff9900', '#3300ff'];
+const terrainNames = ['Forest', 'Desert', 'Swamp'];
+const terrainIcons = ['fa-tree', 'fa-area-chart', 'fa-tint'];
+const terrainRotation = [];
+terrainColor.forEach((item, index) => { terrainRotation.push(index)});
 var visiblePolygons = {};
 const map = L.map('map').setView([0, 0], 13);
 const searchProvider = new GeoSearch.OpenStreetMapProvider();
@@ -134,11 +138,11 @@ function recolorCell(i) {
 }
 
 function getTerrainColor(i) {
-    var dayCount = ((getCurrentUTCDate().getTime() / 1000) / (24 * 60 * 60) + 1) % colorOrder.length;
-    var seedIndex = s2IdToNumericToken(i) % colorOrder.length;
-    var colorIndex = (seedIndex + dayCount) % colorOrder.length;
+    var dayCount = ((getCurrentUTCDate().getTime() / 1000) / (24 * 60 * 60) + 1) % terrainColor.length;
+    var seedIndex = s2IdToNumericToken(i) % terrainColor.length;
+    var terrainIndex = (seedIndex + dayCount) % terrainColor.length;
 
-    return colorOrder[colorIndex];
+    return terrainColor[terrainRotation[terrainIndex]];
 }
 
 function mapMove() {
@@ -204,6 +208,36 @@ function mapInit() {
         style: 'button'
       });
     map.addControl(searchControl);
+
+    // terrain controls
+    var terrainButtons = [];
+    terrainRotation.forEach((color, index) => {
+        var buttonIndex = index;
+        var buttonState = index;
+        var button = L.easyButton({
+            id: 'terrain-button',
+            states: terrainRotation.map((color, index) => {
+                return {
+                    stateName: 'terrain' + (index + 1),
+                    icon: terrainIcons[index],
+                    title: terrainNames[index],
+                    onClick: (btn, map) => {
+                        buttonState = (buttonState + 1) % terrainColor.length;
+                        btn.state('terrain' + (buttonState + 1));
+                        terrainRotation[buttonIndex] = buttonState;
+                        recolorCells();
+                    }
+                };
+            })
+        });
+        button.state('terrain' + (buttonState + 1));
+
+        console.log(button);
+        terrainButtons.push(button);
+    });
+
+    // terrain controls
+    L.easyBar(terrainButtons).addTo(map);
 
     // version watermark
     L.control.watermark({ position: 'topright' }).addTo(map);
