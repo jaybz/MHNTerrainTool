@@ -1,6 +1,6 @@
 var S2 = require('s2-geometry').S2;
 const appName = 'MHNTerrainTool';
-const appVersion = '0.8.4';
+const appVersion = '0.8.5';
 const terrainColor = ['#009933', '#ff9900', '#3300ff'];
 const terrainNames = ['Forest', 'Desert', 'Swamp'];
 const terrainIcons = ['fa-tree', 'fa-area-chart', 'fa-tint'];
@@ -161,17 +161,13 @@ function mapMove() {
         cells.forEach((cell) => {
             visiblePolygons[cell.id] = cell.polygon;
 
-            /*cell.polygon.on('click', (e) => {
+            cell.polygon.on('click', (e) => {
                 var id = cell.id;
-                var numToken = s2IdToNumericToken(id);
-                var hexToken = s2IdToToken(id);
-
-                console.log(id % 3);
-                console.log(s2IdToToken(id));
-                console.log(s2IdToNumericToken(id) % 3);
-
-                alert(id + '\n' + numToken + '\n' + hexToken);
-            });*/
+                var center = visiblePolygons[cell.id].getCenter();
+                const url = new URL(location.href);
+                url.hash = center.lat + ',' + center.lng + ',' + defaultZoom + 'z';
+                navigator.clipboard.writeText(url.href);
+            });
             cell.polygon.addTo(map);
             recolorCell(cell.id);
         });
