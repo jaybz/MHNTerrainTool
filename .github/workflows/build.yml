@@ -49,9 +49,9 @@ jobs:
       - name: Create gh-pages directories
         run: mkdir -p gh-pages/dev
       - name: Build Development
-        run: git checkout development && npm run esbuild-minify && cp src/* gh-pages/dev/
+        run: git checkout development && npm run esbuild-minify && cp src/bundle.js src/index.html gh-pages/dev/
       - name: Build Release
-        run: git checkout release && npm run esbuild-minify && cp src/* gh-pages/
+        run: git checkout release && npm run esbuild-minify && cp src/bundle.js src/index.html gh-pages/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
