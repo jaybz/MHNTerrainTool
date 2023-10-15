@@ -1,12 +1,12 @@
 {
-  "dependencies": {
-    "s2-cell-draw": "^1.1.4"
-  },
   "devDependencies": {
     "esbuild": "0.19.4"
   },
   "scripts": {
     "esbuild": "esbuild ./src/index.js --bundle --outfile=docs/bundle.js && copy /Y src\\index.html docs\\index.html",
     "start": "npm run esbuild && http-server docs/"
+  },
+  "dependencies": {
+    "s2-geometry": "1.2.10"
   }
 }

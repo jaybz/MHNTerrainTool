@@ -550,8 +550,8 @@
     "node_modules/s2-geometry/src/s2geometry.js"(exports, module) {
       (function(exports2) {
         "use strict";
-        var S2 = exports2.S2 = { L: {} };
-        S2.L.LatLng = function(rawLat, rawLng, noWrap) {
+        var S22 = exports2.S2 = { L: {} };
+        S22.L.LatLng = function(rawLat, rawLng, noWrap) {
           var lat = parseFloat(rawLat, 10);
           var lng = parseFloat(rawLng, 10);
           if (isNaN(lat) || isNaN(lng)) {
@@ -563,20 +563,20 @@
           }
           return { lat, lng };
         };
-        S2.L.LatLng.DEG_TO_RAD = Math.PI / 180;
-        S2.L.LatLng.RAD_TO_DEG = 180 / Math.PI;
-        S2.LatLngToXYZ = function(latLng) {
-          var d2r = S2.L.LatLng.DEG_TO_RAD;
+        S22.L.LatLng.DEG_TO_RAD = Math.PI / 180;
+        S22.L.LatLng.RAD_TO_DEG = 180 / Math.PI;
+        S22.LatLngToXYZ = function(latLng) {
+          var d2r = S22.L.LatLng.DEG_TO_RAD;
           var phi = latLng.lat * d2r;
           var theta = latLng.lng * d2r;
           var cosphi = Math.cos(phi);
           return [Math.cos(theta) * cosphi, Math.sin(theta) * cosphi, Math.sin(phi)];
         };
-        S2.XYZToLatLng = function(xyz) {
-          var r2d = S2.L.LatLng.RAD_TO_DEG;
+        S22.XYZToLatLng = function(xyz) {
+          var r2d = S22.L.LatLng.RAD_TO_DEG;
           var lat = Math.atan2(xyz[2], Math.sqrt(xyz[0] * xyz[0] + xyz[1] * xyz[1]));
           var lng = Math.atan2(xyz[1], xyz[0]);
-          return S2.L.LatLng(lat * r2d, lng * r2d);
+          return S22.L.LatLng(lat * r2d, lng * r2d);
         };
         var largestAbsComponent = function(xyz) {
           var temp = [Math.abs(xyz[0]), Math.abs(xyz[1]), Math.abs(xyz[2])];
@@ -626,7 +626,7 @@
           }
           return [u, v];
         };
-        S2.XYZToFaceUV = function(xyz) {
+        S22.XYZToFaceUV = function(xyz) {
           var face = largestAbsComponent(xyz);
           if (xyz[face] < 0) {
             face += 3;
@@ -634,7 +634,7 @@
           var uv = faceXYZToUV(face, xyz);
           return [face, uv];
         };
-        S2.FaceUVToXYZ = function(face, uv) {
+        S22.FaceUVToXYZ = function(face, uv) {
           var u = uv[0];
           var v = uv[1];
           switch (face) {
@@ -661,7 +661,7 @@
             return 1 / 3 * (1 - 4 * (1 - st) * (1 - st));
           }
         };
-        S2.STToUV = function(st) {
+        S22.STToUV = function(st) {
           return [singleSTtoUV(st[0]), singleSTtoUV(st[1])];
         };
         var singleUVtoST = function(uv) {
@@ -671,10 +671,10 @@
             return 1 - 0.5 * Math.sqrt(1 - 3 * uv);
           }
         };
-        S2.UVToST = function(uv) {
+        S22.UVToST = function(uv) {
           return [singleUVtoST(uv[0]), singleUVtoST(uv[1])];
         };
-        S2.STToIJ = function(st, order) {
+        S22.STToIJ = function(st, order) {
           var maxSize = 1 << order;
           var singleSTtoIJ = function(st2) {
             var ij = Math.floor(st2 * maxSize);
@@ -682,7 +682,7 @@
           };
           return [singleSTtoIJ(st[0]), singleSTtoIJ(st[1])];
         };
-        S2.IJToST = function(ij, order, offsets) {
+        S22.IJToST = function(ij, order, offsets) {
           var maxSize = 1 << order;
           return [
             (ij[0] + offsets[0]) / maxSize,
@@ -723,9 +723,9 @@
           }
           return positions;
         };
-        S2.S2Cell = function() {
+        S22.S2Cell = function() {
         };
-        S2.S2Cell.FromHilbertQuadKey = function(hilbertQuadkey) {
+        S22.S2Cell.FromHilbertQuadKey = function(hilbertQuadkey) {
           var parts = hilbertQuadkey.split("/");
           var face = parseInt(parts[0]);
           var position = parts[1];
@@ -762,35 +762,35 @@
             point.x = point.y;
             point.y = t;
           }
-          return S2.S2Cell.FromFaceIJ(parseInt(face), [point.x, point.y], level);
+          return S22.S2Cell.FromFaceIJ(parseInt(face), [point.x, point.y], level);
         };
-        S2.S2Cell.FromLatLng = function(latLng, level) {
+        S22.S2Cell.FromLatLng = function(latLng, level) {
           if (!latLng.lat && latLng.lat !== 0 || !latLng.lng && latLng.lng !== 0) {
             throw new Error("Pass { lat: lat, lng: lng } to S2.S2Cell.FromLatLng");
           }
-          var xyz = S2.LatLngToXYZ(latLng);
-          var faceuv = S2.XYZToFaceUV(xyz);
-          var st = S2.UVToST(faceuv[1]);
-          var ij = S2.STToIJ(st, level);
-          return S2.S2Cell.FromFaceIJ(faceuv[0], ij, level);
+          var xyz = S22.LatLngToXYZ(latLng);
+          var faceuv = S22.XYZToFaceUV(xyz);
+          var st = S22.UVToST(faceuv[1]);
+          var ij = S22.STToIJ(st, level);
+          return S22.S2Cell.FromFaceIJ(faceuv[0], ij, level);
         };
-        S2.S2Cell.FromFaceIJ = function(face, ij, level) {
-          var cell = new S2.S2Cell();
+        S22.S2Cell.FromFaceIJ = function(face, ij, level) {
+          var cell = new S22.S2Cell();
           cell.face = face;
           cell.ij = ij;
           cell.level = level;
           return cell;
         };
-        S2.S2Cell.prototype.toString = function() {
+        S22.S2Cell.prototype.toString = function() {
           return "F" + this.face + "ij[" + this.ij[0] + "," + this.ij[1] + "]@" + this.level;
         };
-        S2.S2Cell.prototype.getLatLng = function() {
-          var st = S2.IJToST(this.ij, this.level, [0.5, 0.5]);
-          var uv = S2.STToUV(st);
-          var xyz = S2.FaceUVToXYZ(this.face, uv);
-          return S2.XYZToLatLng(xyz);
+        S22.S2Cell.prototype.getLatLng = function() {
+          var st = S22.IJToST(this.ij, this.level, [0.5, 0.5]);
+          var uv = S22.STToUV(st);
+          var xyz = S22.FaceUVToXYZ(this.face, uv);
+          return S22.XYZToLatLng(xyz);
         };
-        S2.S2Cell.prototype.getCornerLatLngs = function() {
+        S22.S2Cell.prototype.getCornerLatLngs = function() {
           var result = [];
           var offsets = [
             [0, 0],
@@ -799,41 +799,41 @@
             [1, 0]
           ];
           for (var i2 = 0; i2 < 4; i2++) {
-            var st = S2.IJToST(this.ij, this.level, offsets[i2]);
-            var uv = S2.STToUV(st);
-            var xyz = S2.FaceUVToXYZ(this.face, uv);
-            result.push(S2.XYZToLatLng(xyz));
+            var st = S22.IJToST(this.ij, this.level, offsets[i2]);
+            var uv = S22.STToUV(st);
+            var xyz = S22.FaceUVToXYZ(this.face, uv);
+            result.push(S22.XYZToLatLng(xyz));
           }
           return result;
         };
-        S2.S2Cell.prototype.getFaceAndQuads = function() {
+        S22.S2Cell.prototype.getFaceAndQuads = function() {
           var quads = pointToHilbertQuadList(this.ij[0], this.ij[1], this.level, this.face);
           return [this.face, quads];
         };
-        S2.S2Cell.prototype.toHilbertQuadkey = function() {
+        S22.S2Cell.prototype.toHilbertQuadkey = function() {
           var quads = pointToHilbertQuadList(this.ij[0], this.ij[1], this.level, this.face);
           return this.face.toString(10) + "/" + quads.join("");
         };
-        S2.latLngToNeighborKeys = S2.S2Cell.latLngToNeighborKeys = function(lat, lng, level) {
-          return S2.S2Cell.FromLatLng({ lat, lng }, level).getNeighbors().map(function(cell) {
+        S22.latLngToNeighborKeys = S22.S2Cell.latLngToNeighborKeys = function(lat, lng, level) {
+          return S22.S2Cell.FromLatLng({ lat, lng }, level).getNeighbors().map(function(cell) {
             return cell.toHilbertQuadkey();
           });
         };
-        S2.S2Cell.prototype.getNeighbors = function() {
+        S22.S2Cell.prototype.getNeighbors = function() {
           var fromFaceIJWrap = function(face2, ij, level2) {
             var maxSize = 1 << level2;
             if (ij[0] >= 0 && ij[1] >= 0 && ij[0] < maxSize && ij[1] < maxSize) {
-              return S2.S2Cell.FromFaceIJ(face2, ij, level2);
+              return S22.S2Cell.FromFaceIJ(face2, ij, level2);
             } else {
-              var st = S2.IJToST(ij, level2, [0.5, 0.5]);
-              var uv = S2.STToUV(st);
-              var xyz = S2.FaceUVToXYZ(face2, uv);
-              var faceuv = S2.XYZToFaceUV(xyz);
+              var st = S22.IJToST(ij, level2, [0.5, 0.5]);
+              var uv = S22.STToUV(st);
+              var xyz = S22.FaceUVToXYZ(face2, uv);
+              var faceuv = S22.XYZToFaceUV(xyz);
               face2 = faceuv[0];
               uv = faceuv[1];
-              st = S2.UVToST(uv);
-              ij = S2.STToIJ(st, level2);
-              return S2.S2Cell.FromFaceIJ(face2, ij, level2);
+              st = S22.UVToST(uv);
+              ij = S22.STToIJ(st, level2);
+              return S22.S2Cell.FromFaceIJ(face2, ij, level2);
             }
           };
           var face = this.face;
@@ -847,10 +847,10 @@
             fromFaceIJWrap(face, [i2, j + 1], level)
           ];
         };
-        S2.FACE_BITS = 3;
-        S2.MAX_LEVEL = 30;
-        S2.POS_BITS = 2 * S2.MAX_LEVEL + 1;
-        S2.facePosLevelToId = S2.S2Cell.facePosLevelToId = S2.fromFacePosLevel = function(faceN, posS, levelN) {
+        S22.FACE_BITS = 3;
+        S22.MAX_LEVEL = 30;
+        S22.POS_BITS = 2 * S22.MAX_LEVEL + 1;
+        S22.facePosLevelToId = S22.S2Cell.facePosLevelToId = S22.fromFacePosLevel = function(faceN, posS, levelN) {
           var Long = exports2.dcodeIO && exports2.dcodeIO.Long || require_long();
           var faceB;
           var posB;
@@ -862,7 +862,7 @@
             posS = posS.substr(0, levelN);
           }
           faceB = Long.fromString(faceN.toString(10), true, 10).toString(2);
-          while (faceB.length < S2.FACE_BITS) {
+          while (faceB.length < S22.FACE_BITS) {
             faceB = "0" + faceB;
           }
           posB = Long.fromString(posS, true, 4).toString(2);
@@ -871,19 +871,19 @@
           }
           bin = faceB + posB;
           bin += "1";
-          while (bin.length < S2.FACE_BITS + S2.POS_BITS) {
+          while (bin.length < S22.FACE_BITS + S22.POS_BITS) {
             bin += "0";
           }
           return Long.fromString(bin, true, 2).toString(10);
         };
-        S2.keyToId = S2.S2Cell.keyToId = S2.toId = S2.toCellId = S2.fromKey = function(key) {
+        S22.keyToId = S22.S2Cell.keyToId = S22.toId = S22.toCellId = S22.fromKey = function(key) {
           var parts = key.split("/");
-          return S2.fromFacePosLevel(parts[0], parts[1], parts[1].length);
+          return S22.fromFacePosLevel(parts[0], parts[1], parts[1].length);
         };
-        S2.idToKey = S2.S2Cell.idToKey = S2.S2Cell.toKey = S2.toKey = S2.fromId = S2.fromCellId = S2.S2Cell.toHilbertQuadkey = S2.toHilbertQuadkey = function(idS) {
+        S22.idToKey = S22.S2Cell.idToKey = S22.S2Cell.toKey = S22.toKey = S22.fromId = S22.fromCellId = S22.S2Cell.toHilbertQuadkey = S22.toHilbertQuadkey = function(idS) {
           var Long = exports2.dcodeIO && exports2.dcodeIO.Long || require_long();
           var bin = Long.fromString(idS, true, 10).toString(2);
-          while (bin.length < S2.FACE_BITS + S2.POS_BITS) {
+          while (bin.length < S22.FACE_BITS + S22.POS_BITS) {
             bin = "0" + bin;
           }
           var lsbIndex = bin.lastIndexOf("1");
@@ -897,21 +897,21 @@
           }
           return faceS + "/" + posS;
         };
-        S2.keyToLatLng = S2.S2Cell.keyToLatLng = function(key) {
-          var cell2 = S2.S2Cell.FromHilbertQuadKey(key);
+        S22.keyToLatLng = S22.S2Cell.keyToLatLng = function(key) {
+          var cell2 = S22.S2Cell.FromHilbertQuadKey(key);
           return cell2.getLatLng();
         };
-        S2.idToLatLng = S2.S2Cell.idToLatLng = function(id) {
-          var key = S2.idToKey(id);
-          return S2.keyToLatLng(key);
+        S22.idToLatLng = S22.S2Cell.idToLatLng = function(id) {
+          var key = S22.idToKey(id);
+          return S22.keyToLatLng(key);
         };
-        S2.S2Cell.latLngToKey = S2.latLngToKey = S2.latLngToQuadkey = function(lat, lng, level) {
+        S22.S2Cell.latLngToKey = S22.latLngToKey = S22.latLngToQuadkey = function(lat, lng, level) {
           if (isNaN(level) || level < 1 || level > 30) {
             throw new Error("'level' is not a number between 1 and 30 (but it should be)");
           }
-          return S2.S2Cell.FromLatLng({ lat, lng }, level).toHilbertQuadkey();
+          return S22.S2Cell.FromLatLng({ lat, lng }, level).toHilbertQuadkey();
         };
-        S2.stepKey = function(key, num) {
+        S22.stepKey = function(key, num) {
           var Long = exports2.dcodeIO && exports2.dcodeIO.Long || require_long();
           var parts = key.split("/");
           var faceS = parts[0];
@@ -933,206 +933,31 @@
           }
           return faceS + "/" + otherS;
         };
-        S2.S2Cell.prevKey = S2.prevKey = function(key) {
-          return S2.stepKey(key, -1);
+        S22.S2Cell.prevKey = S22.prevKey = function(key) {
+          return S22.stepKey(key, -1);
         };
-        S2.S2Cell.nextKey = S2.nextKey = function(key) {
-          return S2.stepKey(key, 1);
+        S22.S2Cell.nextKey = S22.nextKey = function(key) {
+          return S22.stepKey(key, 1);
         };
       })("undefined" !== typeof module ? module.exports : window);
     }
   });
 
-  // node_modules/s2-cell-draw/index.js
-  var require_s2_cell_draw = __commonJS({
-    "node_modules/s2-cell-draw/index.js"(exports, module) {
-      var { S2 } = require_s2geometry();
-      function deboxByKey(s2Key) {
-        const { lat, lng } = S2.keyToLatLng(s2Key);
-        const level = s2Key.length - 2;
-        const CPointNeighborsKey = S2.latLngToNeighborKeys(lat, lng, level);
-        const BPointLatLng = S2.keyToLatLng(CPointNeighborsKey[3]);
-        const DPointLatLng = S2.keyToLatLng(CPointNeighborsKey[0]);
-        const DPointNeighborsKey = S2.latLngToNeighborKeys(
-          DPointLatLng.lat,
-          DPointLatLng.lng,
-          level
-        );
-        const APointLatLng = S2.keyToLatLng(DPointNeighborsKey[3]);
-        const APoint = [APointLatLng.lng, APointLatLng.lat];
-        const BPoint = [BPointLatLng.lng, BPointLatLng.lat];
-        const CPoint = [lng, lat];
-        const DPoint = [DPointLatLng.lng, DPointLatLng.lat];
-        let lngSum = 0;
-        let latSum = 0;
-        [APoint, BPoint, CPoint, DPoint].forEach(([_lng, _lat]) => {
-          lngSum += _lng;
-          latSum += _lat;
-        });
-        const gravityCenter = [lngSum / 4, latSum / 4];
-        const APointOffset = [
-          gravityCenter[0] - APoint[0],
-          gravityCenter[1] - APoint[1]
-        ];
-        const BPointOffset = [
-          gravityCenter[0] - BPoint[0],
-          gravityCenter[1] - BPoint[1]
-        ];
-        const CPointOffset = [
-          gravityCenter[0] - CPoint[0],
-          gravityCenter[1] - CPoint[1]
-        ];
-        const DPointOffset = [
-          gravityCenter[0] - DPoint[0],
-          gravityCenter[1] - DPoint[1]
-        ];
-        const northwest = [lng - APointOffset[0], lat - APointOffset[1]];
-        const northeast = [lng - BPointOffset[0], lat - BPointOffset[1]];
-        const southeast = [lng - CPointOffset[0], lat - CPointOffset[1]];
-        const southwest = [lng - DPointOffset[0], lat - DPointOffset[1]];
-        return {
-          path: [northwest, northeast, southeast, southwest],
-          center: [lng, lat],
-          S2Key: s2Key
-        };
-      }
-      function getPointListFromBounds(option = {}) {
-        const { bounds: bounds2 } = option;
-        const level = option.level || 16;
-        const _lng = (bounds2[0][0] + bounds2[1][0]) / 2;
-        const _lat = (bounds2[0][1] + bounds2[1][1]) / 2;
-        const splitCount = 2.5;
-        const blurRatio = 0;
-        const s2Key = S2.latLngToKey(_lat, _lng, level);
-        const { lng, lat } = S2.keyToLatLng(s2Key);
-        const neighborsKey = S2.latLngToNeighborKeys(lat, lng, level);
-        const rightLng = Math.max(S2.keyToLatLng(neighborsKey[2]).lng, S2.keyToLatLng(neighborsKey[3]).lng);
-        const topLat = Math.max(S2.keyToLatLng(neighborsKey[2]).lat, S2.keyToLatLng(neighborsKey[3]).lat);
-        const unitLng = rightLng - lng;
-        const unitLat = topLat - lat;
-        const startLng = Math.min(bounds2[0][0], bounds2[1][0]) - unitLng * blurRatio;
-        const endLng = Math.max(bounds2[0][0], bounds2[1][0]) + unitLng * blurRatio;
-        const startLat = Math.min(bounds2[0][1], bounds2[1][1]) - unitLat * blurRatio;
-        const endLat = Math.max(bounds2[0][1], bounds2[1][1]) + unitLat * blurRatio;
-        const stepLng = Math.abs(unitLng) / splitCount;
-        const stepLat = Math.abs(unitLat) / splitCount;
-        const pointList = [];
-        for (let lngNum = startLng; lngNum < endLng; lngNum += stepLng) {
-          for (let latNum = startLat; latNum < endLat; latNum += stepLat) {
-            pointList.push([lngNum, latNum]);
-          }
-        }
-        const mapObj = pointList.reduce((obj, [lng2, lat2]) => {
-          obj[S2.latLngToKey(lat2, lng2, level)] = true;
-          return obj;
-        }, {});
-        const ret = Object.keys(mapObj).map((key) => {
-          const latLng = S2.keyToLatLng(key);
-          return {
-            S2Key: key,
-            lngLat: [latLng.lng, latLng.lat]
-          };
-        });
-        return ret;
-      }
-      function getPolygonOffsetFromPoint(option = {}) {
-        const [_lng, _lat] = option.point;
-        const level = option.level || 16;
-        const s2Key = S2.latLngToKey(_lat, _lng, level);
-        const { lng, lat } = S2.keyToLatLng(s2Key);
-        const CPointNeighborsKey = S2.latLngToNeighborKeys(lat, lng, level);
-        const BPointLatLng = S2.keyToLatLng(CPointNeighborsKey[3]);
-        const DPointLatLng = S2.keyToLatLng(CPointNeighborsKey[0]);
-        const DPointNeighborsKey = S2.latLngToNeighborKeys(
-          DPointLatLng.lat,
-          DPointLatLng.lng,
-          level
-        );
-        const APointLatLng = S2.keyToLatLng(DPointNeighborsKey[3]);
-        const APoint = [APointLatLng.lng, APointLatLng.lat];
-        const BPoint = [BPointLatLng.lng, BPointLatLng.lat];
-        const CPoint = [lng, lat];
-        const DPoint = [DPointLatLng.lng, DPointLatLng.lat];
-        let lngSum = 0;
-        let latSum = 0;
-        [APoint, BPoint, CPoint, DPoint].forEach(([_lng2, _lat2]) => {
-          lngSum += _lng2;
-          latSum += _lat2;
-        });
-        const gravityCenter = [lngSum / 4, latSum / 4];
-        const APointOffset = [
-          gravityCenter[0] - APoint[0],
-          gravityCenter[1] - APoint[1]
-        ];
-        const BPointOffset = [
-          gravityCenter[0] - BPoint[0],
-          gravityCenter[1] - BPoint[1]
-        ];
-        const CPointOffset = [
-          gravityCenter[0] - CPoint[0],
-          gravityCenter[1] - CPoint[1]
-        ];
-        const DPointOffset = [
-          gravityCenter[0] - DPoint[0],
-          gravityCenter[1] - DPoint[1]
-        ];
-        const ret = [APointOffset, BPointOffset, CPointOffset, DPointOffset];
-        return ret;
-      }
-      function polygonFromPoint(point, polygonOffset) {
-        const [lng, lat] = point.lngLat;
-        const APoint = [lng - polygonOffset[0][0], lat - polygonOffset[0][1]];
-        const BPoint = [lng - polygonOffset[1][0], lat - polygonOffset[1][1]];
-        const CPoint = [lng - polygonOffset[2][0], lat - polygonOffset[2][1]];
-        const DPoint = [lng - polygonOffset[3][0], lat - polygonOffset[3][1]];
-        return {
-          path: [APoint, BPoint, CPoint, DPoint],
-          center: [lng, lat],
-          S2Key: point.S2Key
-        };
-      }
-      function createPolygonListFromBounds(option = {}) {
-        const { bounds: bounds2 } = option;
-        const level = option.level || 16;
-        const lng = (bounds2[0][0] + bounds2[1][0]) / 2;
-        const lat = (bounds2[0][1] + bounds2[1][1]) / 2;
-        const targetPointList = getPointListFromBounds({ bounds: bounds2, level });
-        const fourtPointOffset = getPolygonOffsetFromPoint({
-          point: [lng, lat],
-          level
-        });
-        const polygonList = targetPointList.reduce((arr, s2Point) => {
-          arr.push(polygonFromPoint(s2Point, fourtPointOffset));
-          return arr;
-        }, []);
-        return polygonList;
-      }
-      module.exports = {
-        deboxByKey,
-        getPointListFromBounds,
-        getPolygonOffsetFromPoint,
-        createPolygonListFromBounds
-      };
-    }
-  });
-
   // src/index.js
-  var s2 = require_s2_cell_draw();
+  var S2 = require_s2geometry().S2;
   var appName = "MHNTerrainTool";
-  var localStorageVersion = 1;
-  var appVersion = "0.7.8";
-  var colorOrder = ["#ff9900", "#009933", "#cc00ff"];
-  var knownCells = {};
-  var polyList = [];
-  var dataMigrations = [dataMigrationOldToV1];
-  var dataVersion = dataMigrations.length;
+  var appVersion = "0.8.0";
+  var colorOrder = ["#009933", "#ff9900", "#5500ff"];
+  var visiblePolygons = {};
   var map = L.map("map").setView([0, 0], 13);
   var searchProvider = new GeoSearch.OpenStreetMapProvider();
+  var terrainCellLevel = 14;
+  var terrainOpacity = 0.2;
   var timerId = null;
   L.Control.Watermark = L.Control.extend({
     onAdd: function(map2) {
       var text = L.DomUtil.create("span");
-      text.innerHTML = "MHNTerrainTool v" + appVersion + ", data version: " + localStorageVersion;
+      text.innerHTML = appName + " v" + appVersion;
       return text;
     },
     onRemove: function(map2) {
@@ -1141,17 +966,74 @@
   L.control.watermark = function(opts) {
     return new L.Control.Watermark(opts);
   };
-  function dataMigrationOldToV1(versionedData) {
-    if (versionedData == null)
-      return versionedData;
-    var version = versionedData.version;
-    var cells = versionedData.cells;
-    if (version === 0) {
-      versionedData.version++;
-    } else {
-      return versionedData;
+  function s2IdToNumericToken(cellId) {
+    return s2TokenToInt(s2IdToToken(cellId));
+  }
+  function s2IdToToken(cellId) {
+    return cellId.toString(16).replace(/0+$/, "");
+  }
+  function s2TokenToInt(token) {
+    return parseInt(token, 16);
+  }
+  function s2GetVisibleCells(bounds2) {
+    var center = bounds2.getCenter();
+    var origin = getCellFromPoint(center);
+    var visibleCells = [origin];
+    var visibleNeighbors = getCellNeighbors(origin).filter((cell) => {
+      return !visibleCells.map((cell2) => {
+        return cell2.id;
+      }).includes(cell.id);
+    }).filter((cell) => {
+      return isCellVisible(bounds2, cell);
+    });
+    while (visibleNeighbors.length > 0) {
+      visibleCells = visibleCells.concat(visibleNeighbors);
+      var newNeighbors = [];
+      visibleNeighbors.forEach((neighbor) => {
+        newNeighbors = newNeighbors.concat(
+          getCellNeighbors(neighbor).filter((cell) => {
+            return !visibleCells.map((existing) => {
+              return existing.id;
+            }).includes(cell.id);
+          }).filter((cell) => {
+            return !newNeighbors.map((existing) => {
+              return existing.id;
+            }).includes(cell.id);
+          })
+        );
+      });
+      visibleNeighbors = newNeighbors.filter((cell) => {
+        return isCellVisible(bounds2, cell);
+      });
     }
-    return versionedData;
+    return visibleCells;
+  }
+  function getCellFromPoint(point) {
+    var s2cell = S2.S2Cell.FromLatLng(point, terrainCellLevel);
+    var poly = s2CellToPolygon(s2cell);
+    var key = s2cell.toHilbertQuadkey();
+    var id = S2.keyToId(key);
+    return { s2cell, polygon: poly, id, key };
+  }
+  function getCellNeighbors(cell) {
+    var s2cell = cell.s2cell;
+    var s2neighbors = cell.s2cell.getNeighbors();
+    var neighbors = s2neighbors.map((item) => {
+      return { s2cell: item, polygon: s2CellToPolygon(item), id: S2.keyToId(item.toHilbertQuadkey()) };
+    });
+    return neighbors;
+  }
+  function s2CellToPolygon(cell) {
+    var corners = cell.getCornerLatLngs();
+    return L.polygon([
+      [corners[0].lat, corners[0].lng],
+      [corners[1].lat, corners[1].lng],
+      [corners[2].lat, corners[2].lng],
+      [corners[3].lat, corners[3].lng]
+    ], { color: "#999999", weight: 1, fill: true });
+  }
+  function isCellVisible(bounds2, cell) {
+    return bounds2.overlaps(cell.polygon._bounds);
   }
   function showCurrentLocation() {
     if (map) {
@@ -1164,9 +1046,9 @@
     }
   }
   function clearCells() {
-    for (i in polyList) {
-      map.removeLayer(polyList[i]);
-      delete polyList[i];
+    for (i in visiblePolygons) {
+      map.removeLayer(visiblePolygons[i]);
+      delete visiblePolygons[i];
     }
   }
   function recolorCellsInterval() {
@@ -1174,7 +1056,7 @@
       recolorCells();
   }
   function recolorCells() {
-    for (i in polyList) {
+    for (i in visiblePolygons) {
       recolorCell(i);
     }
   }
@@ -1184,158 +1066,32 @@
     return today;
   }
   function recolorCell(i2) {
-    if (i2 in polyList) {
-      poly = polyList[i2];
-      if (i2 in knownCells) {
-        poly.setStyle({ fillOpacity: 0.4, fillColor: getTerrainColor(i2) });
-      } else {
-        poly.setStyle({ fillOpacity: 0 });
-      }
+    if (i2 in visiblePolygons) {
+      visiblePolygons[i2].setStyle({ fillOpacity: terrainOpacity, fillColor: getTerrainColor(i2) });
     }
   }
-  function getDateDifference(date1, date2) {
-    const oneDay = 24 * 60 * 60 * 1e3;
-    return Math.floor((date1 - date2) / oneDay);
-  }
-  function getTerrainColor(s2key) {
+  function getTerrainColor(i2) {
     var color = "black";
-    if (s2key in knownCells) {
-      var today = getCurrentUTCDate();
-      var interval = getDateDifference(today, knownCells[s2key].origin) % colorOrder.length;
-      if (knownCells[s2key].order < 0) {
-        interval = colorOrder.length - 1 - interval;
-      }
-      color = colorOrder[interval];
-    }
-    return color;
-  }
-  function migrateVersionedData(versionedData) {
-    if (!versionedData)
-      return null;
-    var currentVersion = versionedData.version;
-    for (; currentDataVersion < dataVersion; currentDataVersion++) {
-      versionedData = dataMigrations[currentDataVersion](versionedData);
-      if (versionedData == null)
-        break;
-    }
-    return versionedData;
-  }
-  function getData() {
-    if (!localStorage.knownCells || !localStorage.dataVersion) {
-      saveData();
-    } else if (localStorage.dataVersion != dataVersion) {
-      var currentDataVersion2 = 0;
-      if (localStorage.dataVersion != "1.3") {
-        currentDataVersion2 = localStorage.dataVersion;
-      }
-      var versionedData = migrateVersionedData({
-        version: currentDataVersion2,
-        cells: JSON.parse(localStorage.knownCells, parseKnownCells)
-      });
-      if (versionedData != null && versionedData.version === dataVersion) {
-        knownCells = versionedData.cells;
-        alert("WARNING: Old map data was converted to most recent version. The conversion may have errors.");
-      } else {
-        knownCells = {};
-        alert("ERROR: Old map data could not be converted to the most recent version. Data was cleared instead.");
-      }
-      saveData();
-    } else {
-      knownCells = JSON.parse(localStorage.knownCells, parseKnownCells);
-    }
-  }
-  function saveData() {
-    localStorage.knownCells = JSON.stringify(knownCells);
-    localStorage.dataVersion = dataVersion;
-  }
-  function parseKnownCells(key, value) {
-    if (key == "origin") {
-      return new Date(value);
-    } else {
-      return value;
-    }
+    var token = s2IdToNumericToken(i2);
+    var dayCount = getCurrentUTCDate().getTime() / 1e3 / (24 * 60 * 60) + 1;
+    var seedIndex = i2 % colorOrder.length;
+    var colorIndex = (seedIndex + dayCount) % colorOrder.length;
+    return colorOrder[colorIndex];
   }
   function mapMove() {
     bounds = map.getBounds();
     clearCells();
     if (map.getZoom() >= 12) {
-      const cells = s2.createPolygonListFromBounds({
-        bounds: [[bounds._southWest.lng, bounds._southWest.lat], [bounds._northEast.lng, bounds._northEast.lat]],
-        level: 14
+      const cells = s2GetVisibleCells(bounds);
+      var tmp = s2GetVisibleCells(bounds);
+      cells.forEach((cell) => {
+        visiblePolygons[cell.id] = cell.polygon;
+        cell.polygon.addTo(map);
+        recolorCell(cell.id);
       });
-      for (let i2 = 0; i2 < cells.length; i2++) {
-        var box = cells[i2];
-        polygon = [
-          [box.path[0][1], box.path[0][0]],
-          [box.path[1][1], box.path[1][0]],
-          [box.path[2][1], box.path[2][0]],
-          [box.path[3][1], box.path[3][0]]
-        ];
-        poly = L.polygon(polygon, { color: "#999999", weight: 1, fill: true }).addTo(map);
-        polyList[cells[i2]["S2Key"]] = poly;
-        recolorCell(cells[i2]["S2Key"]);
-        poly.on("click", function(e) {
-          var s2key = cells[i2]["S2Key"];
-          var defaultOrder = cells[i2].center[1] > 0 ? -1 : 1;
-          var today = getCurrentUTCDate();
-          var twoDaysAgo = getCurrentUTCDate();
-          twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-          if (s2key in knownCells === false) {
-            knownCells[s2key] = { origin: defaultOrder > 0 ? today : twoDaysAgo, order: defaultOrder };
-          } else {
-            var interval = (1 + getDateDifference(today, knownCells[s2key].origin)) % colorOrder.length;
-            knownCells[s2key].origin = today;
-            knownCells[s2key].origin.setDate(today.getDate() - interval);
-          }
-          saveData();
-          recolorCell(s2key);
-        });
-        poly.on("contextmenu", function(e) {
-          var s2key = cells[i2]["S2Key"];
-          if (s2key in knownCells) {
-            var win = L.control.window(map, {
-              modal: true,
-              closeButton: false,
-              position: "center",
-              content: "Current rotation: " + (knownCells[s2key].order > 0 ? "Desert > Forest > Swamp" : "Desert > Swamp > Forest"),
-              prompt: {
-                buttonOK: '<i class="fa fa-trash-o" aria-hidden="true" title="Clear Cell"></i>',
-                callback: function() {
-                  var s2key2 = cells[i2]["S2Key"];
-                  delete knownCells[s2key2];
-                  saveData();
-                  recolorCell(s2key2);
-                },
-                buttonAction: '<i class="fa fa-refresh" aria-hidden="true" title="Reverse Terrain Order"></i>',
-                action: function() {
-                  var s2key2 = cells[i2]["S2Key"];
-                  var today = getCurrentUTCDate();
-                  if (s2key2 in knownCells) {
-                    if (knownCells[s2key2].order > 0) {
-                      knownCells[s2key2].order = -1;
-                    } else {
-                      knownCells[s2key2].order = 1;
-                    }
-                    var interval = colorOrder.length - 1 - getDateDifference(today, knownCells[s2key2].origin) % colorOrder.length;
-                    knownCells[s2key2].origin = today;
-                    knownCells[s2key2].origin.setDate(today.getDate() - interval);
-                    console.log(s2key2);
-                    console.log(knownCells[s2key2].origin);
-                    console.log(knownCells[s2key2].order);
-                    saveData();
-                    recolorCell(s2key2);
-                  }
-                },
-                buttonCancel: '<i class="fa fa-times" aria-hidden="true" title="Cancel"></i>'
-              }
-            }).show();
-          }
-        });
-      }
     }
   }
   function mapInit() {
-    getData();
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
@@ -1352,7 +1108,6 @@
       provider: searchProvider,
       showMarker: true,
       marker: {
-        // optional: L.Marker    - default L.Icon.Default
         icon: new L.Icon.Default(),
         draggable: false
       },
@@ -1363,96 +1118,10 @@
       animateZoom: true,
       maxSuggestions: 5,
       keepResult: true,
+      maxMarkers: 1,
       style: "button"
     });
     map.addControl(searchControl);
-    var fileUpload = L.DomUtil.get("fileupload");
-    L.DomEvent.on(fileUpload, "change", function(e) {
-      const file = e.target.files[0];
-      var reader = new FileReader();
-      reader.addEventListener(
-        "load",
-        () => {
-          var versionedData = JSON.parse(reader.result, parseKnownCells);
-          var abort = false;
-          var importVersion = versionedData.version;
-          if (versionedData != null && versionedData.version != dataVersion) {
-            if (confirm("WARNING: Imported file is using an old data version and might not be imported correctly. Do you want to continue?")) {
-              versionedData = migrateVersionedData(versionedData);
-            } else {
-              abort = true;
-            }
-          }
-          if (versionedData == null || versionedData.version != dataVersion) {
-            alert("ERROR: Imported data could not be parsed.");
-          } else if (!abort) {
-            var importCells = versionedData.cells;
-            var foundExisting = false;
-            for (var i2 in importCells) {
-              if (!(i2 in knownCells)) {
-                knownCells[i2] = importCells[i2];
-              } else {
-                foundExisting = true;
-              }
-            }
-            saveData();
-            recolorCells();
-            if (foundExisting) {
-              alert("At least one imported cell already exists in your data. Those cells were ignored in the import. None of your existing data was overwritten.");
-            }
-          }
-        },
-        false
-      );
-      reader.readAsText(file);
-      fileUpload.value = "";
-    });
-    L.easyBar([
-      L.easyButton({
-        id: "export-button",
-        states: [{
-          icon: "fa-download",
-          title: "Export Data",
-          onClick: function(btn, map2) {
-            const exportFileName = appName + "-" + appVersion + "-" + localStorage.dataVersion + "-export.json";
-            var versionedData = {
-              version: localStorage.dataVersion,
-              cells: JSON.parse(localStorage.knownCells, parseKnownCells)
-            };
-            var serializedData = JSON.stringify(versionedData);
-            var file = new Blob([serializedData], { type: "application/json" });
-            var a = document.createElement("a");
-            a.href = URL.createObjectURL(file);
-            a.download = exportFileName;
-            a.click();
-          }
-        }]
-      }),
-      L.easyButton({
-        id: "import-button",
-        states: [{
-          icon: "fa-upload",
-          title: "Import Data",
-          onClick: function(btn, map2) {
-            fileUpload.click();
-          }
-        }]
-      }),
-      L.easyButton({
-        id: "clear-data-button",
-        states: [{
-          icon: "fa-trash",
-          title: "Clear Data Data",
-          onClick: function(btn, map2) {
-            if (confirm("This will clear all cells of terrain. Are you sure you want to do this?")) {
-              knownCells = {};
-              saveData();
-              recolorCells();
-            }
-          }
-        }]
-      })
-    ]).addTo(map);
     L.control.watermark({ position: "topright" }).addTo(map);
     map.on("moveend", mapMove);
     showCurrentLocation();
