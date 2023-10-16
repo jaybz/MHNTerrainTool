@@ -1,6 +1,6 @@
 var S2 = require('s2-geometry').S2;
 const appName = 'MHNTerrainMap';
-const appVersion = '0.8.6';
+const appVersion = '0.8.7';
 const terrainColor = ['#009933', '#ff9900', '#3300ff'];
 const terrainNames = ['Forest', 'Desert', 'Swamp'];
 const terrainIcons = ['fa-tree', 'fa-area-chart', 'fa-tint'];
@@ -17,6 +17,7 @@ const terrainCellLevel = 14;
 const terrainOpacity = 0.3;
 var lastRecolor = new Date(0);
 var terrainButtons = [];
+var overrideDate = null;
 
 var timerId = null;
 
@@ -203,15 +204,6 @@ function mapInit() {
     }).addTo(map);
     
     // map controls
-    L.control.locate({
-        drawCircle: false,
-        keepCurrentZoomLevel: true,
-        icon: 'fa fa-map-marker',
-        iconLoading: 'fa fa-spinner fa-pulse fa-fw',
-        iconElementTag: 'i',
-        clickBehavior: {inView: 'stop', outOfView: 'setView', inViewNotFollowing: 'setView'}
-    }).addTo(map);
-
     const searchControl = new GeoSearch.GeoSearchControl({
         position: 'topleft',
         provider: searchProvider,
@@ -232,6 +224,15 @@ function mapInit() {
       });
     map.addControl(searchControl);
 
+    L.control.locate({
+        drawCircle: false,
+        keepCurrentZoomLevel: true,
+        icon: 'fa fa-map-marker',
+        iconLoading: 'fa fa-spinner fa-pulse fa-fw',
+        iconElementTag: 'i',
+        clickBehavior: {inView: 'stop', outOfView: 'setView', inViewNotFollowing: 'setView'}
+    }).addTo(map);
+
     // terrain controls
     terrainRotation.forEach((color, index) => {
         var buttonIndex = index;
@@ -244,9 +245,9 @@ function mapInit() {
                     icon: terrainIcons[index],
                     title: terrainNames[index],
                     onClick: (btn) => {
-                        buttonState = (buttonState + 1) % terrainColor.length;
-                        btn.state('terrain' + (buttonState + 1));
-                        terrainRotation[buttonIndex] = buttonState;
+                        var currentTerrain = (buttonState + 1) % terrainColor.length;
+                        btn.state('terrain' + (currentTerrain + 1));
+                        terrainRotation[buttonIndex] = currentTerrain;
                         saveLocalStorageData();
                         recolorCells();
                     }
@@ -265,10 +266,17 @@ function mapInit() {
             icon: 'fa-refresh',
             title: 'Reset to default rotation',
             onClick: () => {
-                for(var i in terrainRotation) {
+                terrainRotation.forEach((r, i) => {
                     terrainRotation[i] = parseInt(i);
                     terrainButtons[i].state('terrain' + (parseInt(i) + 1));
-                }
+                });
+
+                /*
+                for(var i in terrainRotation) {
+                    terrainRotation[i] = parseInt(i);
+                    console.log('terrain' + (parseInt(i) + 1));
+                    terrainButtons[i].state('terrain' + (parseInt(i) + 1));
+                }*/
                 saveLocalStorageData();
                 recolorCells();
             }
@@ -286,6 +294,22 @@ function mapInit() {
         showCurrentLocation();
     else
         map.setZoom(initLocation.zoom);
+
+    // calendar control
+    L.control.calendar({
+		backButton: true,
+		nextButton: true,
+		marginLeft: "10px",
+		marginRight: "10px",
+		marginTop: "10px",
+		marginBottom: "10px",
+        minDate: '2023-04-01',
+        maxDate: '2023-04-29',
+        position: 'topright',
+        onSelectDate: (value) => {
+            alert("Date: " + value);
+        }
+    }).addTo(this.map);
 
     window.addEventListener('hashchange', function() {
         const newLocation = L.Permalink.getMapLocation();
