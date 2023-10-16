@@ -270,6 +270,7 @@ function mapInit() {
                     terrainButtons[i].state('terrain' + (parseInt(i) + 1));
                 }
                 saveLocalStorageData();
+                recolorCells();
             }
         }]
     }));
