@@ -1,10 +1,11 @@
 var S2 = require('s2-geometry').S2;
 const appName = 'MHNTerrainTool';
-const appVersion = '0.8.5';
+const appVersion = '0.8.6';
 const terrainColor = ['#009933', '#ff9900', '#3300ff'];
 const terrainNames = ['Forest', 'Desert', 'Swamp'];
 const terrainIcons = ['fa-tree', 'fa-area-chart', 'fa-tint'];
-const terrainRotation = [];
+var dataVersion = '1.0';
+var terrainRotation = [];
 terrainColor.forEach((item, index) => { terrainRotation.push(index)});
 var visiblePolygons = {};
 const initLocation = L.Permalink.getMapLocation(-1, [37.7955742, -122.3958959]);
@@ -14,6 +15,8 @@ L.Permalink.setup(map);
 const searchProvider = new GeoSearch.OpenStreetMapProvider();
 const terrainCellLevel = 14;
 const terrainOpacity = 0.3;
+var lastRecolor = new Date(0);
+var terrainButtons = [];
 
 var timerId = null;
 
@@ -123,13 +126,19 @@ function clearCells() {
 }
 
 function recolorCellsInterval() {
-    if (document.visibilityState === "visible") recolorCells();
+    if (
+        document.visibilityState === "visible" &&
+        (((getCurrentUTCDate() - lastRecolor) / (24 * 60 * 60 * 1000)) >= 1)
+    ) {
+        recolorCells();
+    }
 }
 
 function recolorCells() {
     for (i in visiblePolygons) {
         recolorCell(i);
     }
+    lastRecolor = getCurrentUTCDate();
 }
 
 function getCurrentUTCDate() {
@@ -152,6 +161,19 @@ function getTerrainColor(i) {
     return terrainColor[terrainRotation[terrainIndex]];
 }
 
+function getLocalStorageData() {
+    if (localStorage.dataVersion === dataVersion) {
+        terrainRotation = JSON.parse(localStorage.terrainRotation);
+    } else {
+        saveLocalStorageData();
+    }
+}
+
+function saveLocalStorageData() {
+    localStorage.dataVersion = dataVersion;
+    localStorage.terrainRotation = JSON.stringify(terrainRotation);
+}
+
 function mapMove() {
     bounds = map.getBounds();
     clearCells();
@@ -169,8 +191,8 @@ function mapMove() {
                 navigator.clipboard.writeText(url.href);
             });
             cell.polygon.addTo(map);
-            recolorCell(cell.id);
         });
+        recolorCells();
     }
 }
 
@@ -211,7 +233,6 @@ function mapInit() {
     map.addControl(searchControl);
 
     // terrain controls
-    var terrainButtons = [];
     terrainRotation.forEach((color, index) => {
         var buttonIndex = index;
         var buttonState = index;
@@ -226,17 +247,33 @@ function mapInit() {
                         buttonState = (buttonState + 1) % terrainColor.length;
                         btn.state('terrain' + (buttonState + 1));
                         terrainRotation[buttonIndex] = buttonState;
+                        saveLocalStorageData();
                         recolorCells();
                     }
                 };
             })
         });
-        button.state('terrain' + (buttonState + 1));
+        button.state('terrain' + (terrainRotation[buttonIndex] + 1));
 
         terrainButtons.push(button);
     });
 
     // terrain controls
+    terrainButtons.push(L.easyButton({
+        id: 'terrain-reset',
+        states: [{
+            icon: 'fa-refresh',
+            title: 'Reset to default rotation',
+            onClick: () => {
+                for(var i in terrainRotation) {
+                    terrainRotation[i] = parseInt(i);
+                    terrainButtons[i].state('terrain' + (parseInt(i) + 1));
+                }
+                saveLocalStorageData();
+                recolorCells();
+            }
+        }]
+    }));
     L.easyBar(terrainButtons).addTo(map);
 
     // version watermark
@@ -255,7 +292,8 @@ function mapInit() {
         map.setView(newLocation.center, newLocation.zoom, {animate: true});
     });
 
-    timerId = setInterval(recolorCellsInterval, 60000);
+    timerId = setInterval(recolorCellsInterval, 6000);
 }
 
+getLocalStorageData();
 mapInit();
