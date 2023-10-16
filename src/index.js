@@ -246,7 +246,6 @@ function mapInit() {
                     title: terrainNames[index],
                     onClick: (btn) => {
                         var nextTerrain = (index + 1) % terrainColor.length;
-                        console.log('terrain' + (nextTerrain + 1));
                         btn.state('terrain' + (nextTerrain + 1));
                         terrainRotation[buttonIndex] = nextTerrain;
                         saveLocalStorageData();
