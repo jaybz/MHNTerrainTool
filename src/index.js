@@ -162,7 +162,6 @@ function getTerrainColor(i) {
 }
 
 function getLocalStorageData() {
-    console.log('get ' + localStorage.terrainRotation);
     if (localStorage.dataVersion === dataVersion) {
         terrainRotation = JSON.parse(localStorage.terrainRotation);
     } else {
@@ -173,7 +172,6 @@ function getLocalStorageData() {
 function saveLocalStorageData() {
     localStorage.dataVersion = dataVersion;
     localStorage.terrainRotation = JSON.stringify(terrainRotation);
-    console.log('save ' + localStorage.terrainRotation);
 }
 
 function mapMove() {
@@ -269,7 +267,6 @@ function mapInit() {
             onClick: () => {
                 for(var i in terrainRotation) {
                     terrainRotation[i] = parseInt(i);
-                    console.log('terrain' + (parseInt(i) + 1));
                     terrainButtons[i].state('terrain' + (parseInt(i) + 1));
                 }
                 saveLocalStorageData();
