@@ -245,9 +245,10 @@ function mapInit() {
                     icon: terrainIcons[index],
                     title: terrainNames[index],
                     onClick: (btn) => {
-                        var currentTerrain = (buttonState + 1) % terrainColor.length;
-                        btn.state('terrain' + (currentTerrain + 1));
-                        terrainRotation[buttonIndex] = currentTerrain;
+                        var nextTerrain = (index + 1) % terrainColor.length;
+                        console.log('terrain' + (nextTerrain + 1));
+                        btn.state('terrain' + (nextTerrain + 1));
+                        terrainRotation[buttonIndex] = nextTerrain;
                         saveLocalStorageData();
                         recolorCells();
                     }
@@ -294,22 +295,6 @@ function mapInit() {
         showCurrentLocation();
     else
         map.setZoom(initLocation.zoom);
-
-    // calendar control
-    L.control.calendar({
-		backButton: true,
-		nextButton: true,
-		marginLeft: "10px",
-		marginRight: "10px",
-		marginTop: "10px",
-		marginBottom: "10px",
-        minDate: '2023-04-01',
-        maxDate: '2023-04-29',
-        position: 'topright',
-        onSelectDate: (value) => {
-            alert("Date: " + value);
-        }
-    }).addTo(this.map);
 
     window.addEventListener('hashchange', function() {
         const newLocation = L.Permalink.getMapLocation();
