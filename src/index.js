@@ -1,5 +1,5 @@
 var S2 = require('s2-geometry').S2;
-const appName = 'MHNTerrainTool';
+const appName = 'MHNTerrainMap';
 const appVersion = '0.8.6';
 const terrainColor = ['#009933', '#ff9900', '#3300ff'];
 const terrainNames = ['Forest', 'Desert', 'Swamp'];
