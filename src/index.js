@@ -1,12 +1,32 @@
 var S2 = require('s2-geometry').S2;
 const appName = 'MHNTerrainMap';
-const appVersion = '0.8.7';
-const terrainColor = ['#009933', '#ff9900', '#3300ff'];
-const terrainNames = ['Forest', 'Desert', 'Swamp'];
-const terrainIcons = ['fa-tree', 'fa-area-chart', 'fa-tint'];
-var dataVersion = '1.0';
+const appVersion = '0.8.8';
+const terrainList = [
+    {   color: '#009933',
+        name: 'Forest',
+        icon: 'fa-tree' },
+    {   color: '#ff9900',
+        name: 'Desert',
+        icon: 'fa-area-chart' },
+    {   color: '#3300ff',
+        name: 'Swamp',
+        icon: 'fa-tint' },
+    /*{   color: '#bbeeff',
+        name: 'Snow',
+        icon: 'fa-snowflake-o' },
+    {   color: '#ff3333',
+        name: 'Lava',
+        icon: 'fa-tint' },*/
+];
+
 var terrainRotation = [];
-terrainColor.forEach((item, index) => { terrainRotation.push(index)});
+var dataVersion = '1.' + terrainList.length;
+terrainList.forEach((item, index) => {
+    terrainRotation.push(index);
+    window.document.styleSheets[window.document.styleSheets.length - 1]
+        .insertRule('#terrain-button.terrain' + (index + 1) + '-active { background-color: ' + terrainList[index].color + '; }');
+});
+
 var visiblePolygons = {};
 const initLocation = L.Permalink.getMapLocation(-1, [37.7955742, -122.3958959]);
 const defaultZoom = 15;
@@ -18,7 +38,7 @@ const terrainOpacity = 0.3;
 var lastRecolor = new Date(0);
 var terrainButtons = [];
 var overrideDate = null;
-
+const calendarControl = null;
 var timerId = null;
 
 L.Control.Watermark = L.Control.extend({
@@ -29,13 +49,23 @@ L.Control.Watermark = L.Control.extend({
 
         return text;
     },
-
-    onRemove: function(map) {}
+    onRemove: (map) => {}
 });
 
-L.control.watermark = function(opts) {
+L.control.watermark = (opts) => {
     return new L.Control.Watermark(opts);
-}
+};
+
+L.Control.Calendar = L.Control.extend({
+    onAdd: (map) => {
+        var text = L.DomUtil.create('span');
+    },
+    onRemove: (map) => {}
+});
+
+L.control.calendar = (opts) => {
+
+};
 
 function s2IdToNumericToken(cellId) {
     return s2TokenToInt(s2IdToToken(cellId));
@@ -155,11 +185,11 @@ function recolorCell(i) {
 }
 
 function getTerrainColor(i) {
-    var dayCount = ((getCurrentUTCDate().getTime() / 1000) / (24 * 60 * 60) + 1) % terrainColor.length;
-    var seedIndex = s2IdToNumericToken(i) % terrainColor.length;
-    var terrainIndex = (seedIndex + dayCount) % terrainColor.length;
+    var dayCount = ((getCurrentUTCDate().getTime() / 1000) / (24 * 60 * 60) + 1) % terrainList.length;
+    var seedIndex = s2IdToNumericToken(i) % terrainList.length;
+    var terrainIndex = (seedIndex + dayCount) % terrainList.length;
 
-    return terrainColor[terrainRotation[terrainIndex]];
+    return terrainList[terrainRotation[terrainIndex]].color;
 }
 
 function getLocalStorageData() {
@@ -242,10 +272,10 @@ function mapInit() {
             states: terrainRotation.map((color, index) => {
                 return {
                     stateName: 'terrain' + (index + 1),
-                    icon: terrainIcons[index],
-                    title: terrainNames[index],
+                    icon: terrainList[index].icon,
+                    title: terrainList[index].name,
                     onClick: (btn) => {
-                        var nextTerrain = (index + 1) % terrainColor.length;
+                        var nextTerrain = (index + 1) % terrainList.length;
                         btn.state('terrain' + (nextTerrain + 1));
                         terrainRotation[buttonIndex] = nextTerrain;
                         saveLocalStorageData();
@@ -277,6 +307,7 @@ function mapInit() {
                     console.log('terrain' + (parseInt(i) + 1));
                     terrainButtons[i].state('terrain' + (parseInt(i) + 1));
                 }*/
+
                 saveLocalStorageData();
                 recolorCells();
             }
