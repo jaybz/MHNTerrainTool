@@ -1,16 +1,40 @@
 var S2 = require('s2-geometry').S2;
 const appName = 'MHNTerrainMap';
-const appVersion = '0.8.7';
-const terrainColor = ['#009933', '#ff9900', '#3300ff'];
-const terrainNames = ['Forest', 'Desert', 'Swamp'];
-const terrainIcons = ['fa-tree', 'fa-area-chart', 'fa-tint'];
-var dataVersion = '1.0';
+const appVersion = '0.8.8';
+const terrainList = [
+    {   color: '#009933',
+        name: 'Forest',
+        icon: 'fa-tree' },
+    {   color: '#ff9900',
+        name: 'Desert',
+        icon: 'fa-area-chart' },
+    {   color: '#5522ff',
+        name: 'Swamp',
+        icon: 'fa-tint' },
+    /*{   color: '#99ccff',
+        name: 'Snow',
+        icon: 'fa-snowflake-o' },
+    {   color: '#ff3333',
+        name: 'Lava',
+        icon: 'fa-tint' },*/
+];
+
 var terrainRotation = [];
-terrainColor.forEach((item, index) => { terrainRotation.push(index)});
+var dataVersion = '1.' + terrainList.length;
+terrainList.forEach((item, index) => {
+    terrainRotation.push(index);
+    window.document.styleSheets[window.document.styleSheets.length - 1]
+        .insertRule('#terrain-button.terrain' + (index + 1) + '-active { background-color: ' + terrainList[index].color + '; }');
+});
+
 var visiblePolygons = {};
 const initLocation = L.Permalink.getMapLocation(-1, [37.7955742, -122.3958959]);
 const defaultZoom = 15;
-const map = L.map('map', {center: initLocation.center, zoom: initLocation.zoom < 0 ? defaultZoom : initLocation.zoom});
+const map = L.map('map', {
+    center: initLocation.center,
+    zoom: initLocation.zoom < 0 ? defaultZoom : initLocation.zoom,
+    zoomControl: false
+});
 L.Permalink.setup(map);
 const searchProvider = new GeoSearch.OpenStreetMapProvider();
 const terrainCellLevel = 14;
@@ -18,24 +42,217 @@ const terrainOpacity = 0.3;
 var lastRecolor = new Date(0);
 var terrainButtons = [];
 var overrideDate = null;
-
+var calendarControl = null;
 var timerId = null;
 
 L.Control.Watermark = L.Control.extend({
     onAdd: function(map) {
         var text = L.DomUtil.create('span');
-
         text.innerHTML = appName + ' v' + appVersion;
-
         return text;
     },
-
-    onRemove: function(map) {}
+    onRemove: (map) => {}
 });
 
-L.control.watermark = function(opts) {
+L.control.watermark = (opts) => {
     return new L.Control.Watermark(opts);
-}
+};
+
+L.Control.Calendar = L.Control.extend({
+    options: {
+        position: 'topleft',
+        id: null,
+        initialDate: new Date(Date.now()),
+        clearUsesInitialDate: false,
+        title: '',
+        minDate: null,
+        maxDate: null,
+        onSelectionChange: (selectedDate) => {
+        },
+        formatDisplay: (selectedDate) => {
+            return selectedDate.toISOString().substring(0,10);
+        }
+    },
+    initialize: (options) => {
+        L.setOptions(this, options);
+
+        this.updateDisplay = () => {
+            if (this._input.value) {
+                var selectedDate = new Date(this._input.value);
+                selectedDate.setUTCHours(0, 0, 0, 0);
+                this._display.innerHTML = this.options.formatDisplay(selectedDate);
+                this._display.style.visibility = 'visible';
+            } else {
+                this._display.innerHTML = '';
+                this._display.style.visibility = 'hidden';
+            }
+        };
+
+        if(this.options.initialDate)
+            this.options.initialDate.setUTCHours(0, 0, 0, 0);
+        this._container = L.DomUtil.create('div', 'leaflet-control-calendar leaflet-bar');
+
+        // button
+        this._a = L.DomUtil.create('a', '', this._container);
+        this._a.innerHTML = '<span class="fa fa-calendar"></span>';
+        this._a.role = 'button';
+        this._a.title = this.options.title;
+        this._a['aria-label'] = this.options.title;
+        this._a.href = '#';
+        this._a.style = 'float:left;display:inline-block';
+
+        // date input
+        this._input = L.DomUtil.create('input', '', this._container);
+        this._input.type = 'date';
+        this._input.style = 'height:0;width:0;padding:0;border:0;display:block;visibility:hidden;float:left;';
+
+        // label
+        this._display = L.DomUtil.create('a', '', this._container);
+        this._display.style = 'visibility:hidden;display:inline-block;height:30px;width:fit-content;padding-right:5px;padding-bottom:1px;cursor:pointer;';
+        this._display.innerHTML = '';
+        
+        // initial options logic
+        if(this.options.initialDate) {
+            this._input.value = this.options.initialDate.toISOString().substring(0,10);
+            this._display.innerHTML = this.options.formatDisplay(this.options.initialDate);
+            this._display.style.visibility = 'visible';
+        }
+        if(this.options.minDate) {
+            this.options.minDate.setUTCHours(0, 0, 0, 0);
+            this._input.min = this.options.minDate.toISOString().substring(0,10);
+        }
+        if(this.options.maxDate) {
+            this.options.maxDate.setUTCHours(0, 0, 0, 0);
+            this._input.max = this.options.maxDate.toISOString().substring(0,10);
+        }
+    },
+    onAdd: (map) => {
+        L.DomEvent.on(this._container, {
+            click: (event) => {
+                L.DomEvent.stop(event);
+                this._input.showPicker();
+            }
+        });
+        L.DomEvent.on(this._container, {
+            dblclick: (event) => {
+                L.DomEvent.stop(event);
+            }
+        });
+        L.DomEvent.on(this._input, {
+            change: (event) => {
+                var selectedDate = null;
+                if (this._input.value) {
+                    var selectedDate = new Date(this._input.value);
+                    selectedDate.setUTCHours(0, 0, 0, 0);
+                } else if (this.options.clearUsesInitialDate && this.options.initialDate) {
+                    this._input.value = this.options.initialDate.toISOString().substring(0,10);
+                    selectedDate = this.options.initialDate;
+                }
+                this.updateDisplay(this);
+                this.options.onSelectionChange(selectedDate);
+            }
+        });
+        return this._container;
+    },
+    reset: () => {
+        if (this.options.clearUsesInitialDate && this.options.initialDate) {
+            var value = this.options.initialDate;
+            if (this.options.minDate > value) {
+                value = this.options.minDate;
+            } else if (this.options.maxDate < value) {
+                value = this.options.maxDate;
+            }
+            this._input.value = value.toISOString().substring(0,10);
+        }
+        else
+            this._input.value = ''
+
+            this.updateDisplay(this);
+    },
+    getValue: () => {
+        var selectedDate = null;
+        if (this._input.value) {
+            selectedDate = new Date(this._input.value);
+            selectedDate.setUTCHours(0, 0, 0, 0);
+        }
+        return selectedDate;
+    },
+    setValue: (value) => {
+        if (value) {
+            value.setUTCHours(0, 0, 0, 0);
+            this._input.value = value.toISOString().substring(0,10);
+        } else {
+            this._input.value = '';
+        }
+        this.updateDisplay(this);
+    },
+    setInitialDate: (value) => {
+        if (value) {
+            value.setUTCHours(0, 0, 0, 0)
+            this.options.initialDate = value;
+            this._input.min = value.toISOString().substring(0,10);
+        } else {
+            this.options.initialDate = null;
+            this._input.min = null;
+        }
+        this.updateDisplay(this);
+    },
+    setMinimum: (value) => {
+        if (value) {
+            value.setUTCHours(0, 0, 0, 0)
+            if (this._input.value) {
+                var selectedDate = new Date(this._input.value);
+                selectedDate.setUTCHours(0, 0, 0, 0);
+
+                if(value > selectedDate) {
+                    this._input.value = value.toISOString().substring(0,10);
+                }
+            }
+            this.options.minDate = value;
+            this._input.min = value.toISOString().substring(0,10);
+        } else {
+            this.options.minDate = null;
+            this._input.min = null;
+        }
+        this.updateDisplay(this);
+    },
+    setMaximum: (value) => {
+        if (value) {
+            value.setUTCHours(0, 0, 0, 0)
+            if (this._input.value) {
+                var selectedDate = new Date(this._input.value);
+                selectedDate.setUTCHours(0, 0, 0, 0);
+
+                if(value < selectedDate) {
+                    this._input.value = value.toISOString().substring(0,10);
+                }
+            }
+            this.options.maxDate = value;
+            this._input.max = value.toISOString().substring(0,10);
+        } else {
+            this.options.maxDate = null;
+            this._input.max = null;
+        }
+        this.updateDisplay(this);
+    },
+    onRemove: (map) => {},
+    enable: () => {
+        L.DomUtil.addClass(this._container, 'enabled');
+        L.DomUtil.removeClass(this._container, 'disabled');
+        this._container.setAttribute('aria-hidden', 'false');
+        return this;
+    },
+    disable: () => {
+        L.DomUtil.addClass(this._container, 'disabled');
+        L.DomUtil.removeClass(this._container, 'enabled');
+        this._container.setAttribute('aria-hidden', 'true');
+        return this;
+    },
+});
+
+L.control.calendar = (opts) => {
+    return new L.Control.Calendar(opts);
+};
 
 function s2IdToNumericToken(cellId) {
     return s2TokenToInt(s2IdToToken(cellId));
@@ -83,7 +300,6 @@ function getCellFromPoint(point) {
 }
 
 function getCellNeighbors(cell) {
-    var s2cell = cell.s2cell;
     var s2neighbors = cell.s2cell.getNeighbors();
     var neighbors = s2neighbors.map((item) => { return { s2cell: item, polygon: s2CellToPolygon(item), id: S2.keyToId(item.toHilbertQuadkey()) }});
     return neighbors;
@@ -127,15 +343,29 @@ function clearCells() {
 }
 
 function recolorCellsInterval() {
-    if (
-        document.visibilityState === "visible" &&
-        (((getCurrentUTCDate() - lastRecolor) / (24 * 60 * 60 * 1000)) >= 1)
+    if ((document.visibilityState === "visible" &&
+        (((getCurrentUTCDate() - lastRecolor) / (24 * 60 * 60 * 1000)) >= 1) ||
+        (getCurrentUTCDate() < calendarControl.getValue()))
     ) {
+        calendarControl.setInitialDate(getCurrentUTCDate());
+        calendarControl.setMinimum(getCurrentUTCDate());
         recolorCells();
     }
 }
 
 function recolorCells() {
+    var now = getCurrentUTCDate();
+    var selectedDate = calendarControl.getValue();
+
+    if(selectedDate && selectedDate < now) {
+        calendarControl.reset();
+        calendarControl.setMinimum(getCurrentUTCDate());
+        var nextYear = getCurrentUTCDate();
+        nextYear.setDate(nextYear.getDate() - 1);
+        nextYear.setFullYear(nextYear.getFullYear() + 1);
+        calendarControl.setMaximum(nextYear);
+    }
+
     for (i in visiblePolygons) {
         recolorCell(i);
     }
@@ -149,17 +379,18 @@ function getCurrentUTCDate() {
 }
 
 function recolorCell(i) {
+    var terrainDate = calendarControl.getValue() || getCurrentUTCDate()
     if (i in visiblePolygons) {
-        visiblePolygons[i].setStyle({fillOpacity: terrainOpacity, fillColor: getTerrainColor(i)});
+        visiblePolygons[i].setStyle({fillOpacity: terrainOpacity, fillColor: getTerrainColor(i, terrainDate)});
     }
 }
 
-function getTerrainColor(i) {
-    var dayCount = ((getCurrentUTCDate().getTime() / 1000) / (24 * 60 * 60) + 1) % terrainColor.length;
-    var seedIndex = s2IdToNumericToken(i) % terrainColor.length;
-    var terrainIndex = (seedIndex + dayCount) % terrainColor.length;
+function getTerrainColor(i, terrainDate) {
+    var dayCount = ((terrainDate.getTime() / 1000) / (24 * 60 * 60) + 1) % terrainList.length;
+    var seedIndex = s2IdToNumericToken(i) % terrainList.length;
+    var terrainIndex = (seedIndex + dayCount) % terrainList.length;
 
-    return terrainColor[terrainRotation[terrainIndex]];
+    return terrainList[terrainRotation[terrainIndex]].color;
 }
 
 function getLocalStorageData() {
@@ -197,6 +428,13 @@ function mapMove() {
     }
 }
 
+function formatDate(date) {
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    return dayNames[date.getUTCDay()] + ', ' + monthNames[date.getUTCMonth()] + ' ' + date.getUTCDate();
+}
+
 function mapInit() {
     // map layers
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -204,6 +442,23 @@ function mapInit() {
     }).addTo(map);
     
     // map controls
+    var nextYear = getCurrentUTCDate();
+    nextYear.setDate(nextYear.getDate() - 1);
+    nextYear.setFullYear(nextYear.getFullYear() + 1);
+    calendarControl = L.control.calendar({
+        position: 'topleft',
+        title: 'Select Date to Show',
+        initialDate: getCurrentUTCDate(),
+        clearUsesInitialDate: true,
+        minDate: getCurrentUTCDate(),
+        maxDate: nextYear,
+        onSelectionChange: (value) => {
+            recolorCells();
+        },
+        formatDisplay: formatDate
+    });
+    calendarControl.addTo(map);
+    
     const searchControl = new GeoSearch.GeoSearchControl({
         position: 'topleft',
         provider: searchProvider,
@@ -224,6 +479,10 @@ function mapInit() {
       });
     map.addControl(searchControl);
 
+    L.control.zoom({
+        position: 'topleft'
+    }).addTo(map);
+    
     L.control.locate({
         drawCircle: false,
         keepCurrentZoomLevel: true,
@@ -236,16 +495,15 @@ function mapInit() {
     // terrain controls
     terrainRotation.forEach((color, index) => {
         var buttonIndex = index;
-        var buttonState = index;
         var button = L.easyButton({
             id: 'terrain-button',
             states: terrainRotation.map((color, index) => {
                 return {
                     stateName: 'terrain' + (index + 1),
-                    icon: terrainIcons[index],
-                    title: terrainNames[index],
+                    icon: terrainList[index].icon,
+                    title: terrainList[index].name,
                     onClick: (btn) => {
-                        var nextTerrain = (index + 1) % terrainColor.length;
+                        var nextTerrain = (index + 1) % terrainList.length;
                         btn.state('terrain' + (nextTerrain + 1));
                         terrainRotation[buttonIndex] = nextTerrain;
                         saveLocalStorageData();
@@ -277,6 +535,7 @@ function mapInit() {
                     console.log('terrain' + (parseInt(i) + 1));
                     terrainButtons[i].state('terrain' + (parseInt(i) + 1));
                 }*/
+
                 saveLocalStorageData();
                 recolorCells();
             }
@@ -300,7 +559,7 @@ function mapInit() {
         map.setView(newLocation.center, newLocation.zoom, {animate: true});
     });
 
-    timerId = setInterval(recolorCellsInterval, 6000);
+    timerId = setInterval(recolorCellsInterval, 60000);
 }
 
 getLocalStorageData();
