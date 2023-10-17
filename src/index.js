@@ -8,15 +8,15 @@ const terrainList = [
     {   color: '#ff9900',
         name: 'Desert',
         icon: 'fa-area-chart' },
-    {   color: '#3300ff',
+    {   color: '#5522ff',
         name: 'Swamp',
         icon: 'fa-tint' },
-    {   color: '#bbeeff',
+    /*{   color: '#99ccff',
         name: 'Snow',
         icon: 'fa-snowflake-o' },
     {   color: '#ff3333',
         name: 'Lava',
-        icon: 'fa-tint' },
+        icon: 'fa-tint' },*/
 ];
 
 var terrainRotation = [];
@@ -24,9 +24,7 @@ var dataVersion = '1.' + terrainList.length;
 terrainList.forEach((item, index) => {
     terrainRotation.push(index);
     window.document.styleSheets[window.document.styleSheets.length - 1]
-        .insertRule('#terrain-button.terrain' + (index + 1) + '-active { color: white; background-color: ' + terrainList[index].color + '; }');
-    window.document.styleSheets[window.document.styleSheets.length - 1]
-        .insertRule('@media (prefers-color-scheme: dark) { #terrain-button.terrain' + (index + 1) + '-active { color: white; background-color: ' + terrainList[index].color + '; } }');
+        .insertRule('#terrain-button.terrain' + (index + 1) + '-active { background-color: ' + terrainList[index].color + '; }');
 });
 
 var visiblePolygons = {};
