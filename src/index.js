@@ -70,11 +70,24 @@ L.Control.Calendar = L.Control.extend({
         onSelectionChange: (selectedDate) => {
         },
         formatDisplay: (selectedDate) => {
-
+            return selectedDate.toISOString().substring(0,10);
         }
     },
     initialize: (options) => {
         L.setOptions(this, options);
+
+        this.updateDisplay = () => {
+            if (this._input.value) {
+                var selectedDate = new Date(this._input.value);
+                selectedDate.setUTCHours(0, 0, 0, 0);
+                this._display.innerHTML = this.options.formatDisplay(selectedDate);
+                this._display.style.visibility = 'visible';
+            } else {
+                this._display.innerHTML = '';
+                this._display.style.visibility = 'hidden';
+            }
+        };
+
         if(this.options.initialDate)
             this.options.initialDate.setUTCHours(0, 0, 0, 0);
         this._container = L.DomUtil.create('div', 'leaflet-control-calendar leaflet-bar');
@@ -86,19 +99,24 @@ L.Control.Calendar = L.Control.extend({
         this._a.title = this.options.title;
         this._a['aria-label'] = this.options.title;
         this._a.href = '#';
-        this._a.style = 'float: left';
+        this._a.style = 'float:left;display:inline-block';
 
         // date input
         this._input = L.DomUtil.create('input', '', this._container);
         this._input.type = 'date';
-        this._input.style = 'height:0;width:0;padding:0;border:0;display:block;visibility:hidden;';
+        this._input.style = 'height:0;width:0;padding:0;border:0;display:block;visibility:hidden;float:left;';
 
         // label
-        this._display = L.DomUtil.create('span', '', this._container);
+        this._display = L.DomUtil.create('a', '', this._container);
+        this._display.style = 'visibility:hidden;display:inline-block;height:30px;width:fit-content;padding-right:5px;padding-bottom:1px;cursor:pointer;';
+        this._display.innerHTML = '';
         
         // initial options logic
-        if(this.options.initialDate)
+        if(this.options.initialDate) {
             this._input.value = this.options.initialDate.toISOString().substring(0,10);
+            this._display.innerHTML = this.options.formatDisplay(this.options.initialDate);
+            this._display.style.visibility = 'visible';
+        }
         if(this.options.minDate) {
             this.options.minDate.setUTCHours(0, 0, 0, 0);
             this._input.min = this.options.minDate.toISOString().substring(0,10);
@@ -130,6 +148,7 @@ L.Control.Calendar = L.Control.extend({
                     this._input.value = this.options.initialDate.toISOString().substring(0,10);
                     selectedDate = this.options.initialDate;
                 }
+                this.updateDisplay(this);
                 this.options.onSelectionChange(selectedDate);
             }
         });
@@ -137,11 +156,18 @@ L.Control.Calendar = L.Control.extend({
     },
     reset: () => {
         if (this.options.clearUsesInitialDate && this.options.initialDate) {
-            var value = getCurrentUTCDate();
+            var value = this.options.initialDate;
+            if (this.options.minDate > value) {
+                value = this.options.minDate;
+            } else if (this.options.maxDate < value) {
+                value = this.options.maxDate;
+            }
             this._input.value = value.toISOString().substring(0,10);
         }
         else
             this._input.value = ''
+
+            this.updateDisplay(this);
     },
     getValue: () => {
         var selectedDate = null;
@@ -158,6 +184,18 @@ L.Control.Calendar = L.Control.extend({
         } else {
             this._input.value = '';
         }
+        this.updateDisplay(this);
+    },
+    setInitialDate: (value) => {
+        if (value) {
+            value.setUTCHours(0, 0, 0, 0)
+            this.options.initialDate = value;
+            this._input.min = value.toISOString().substring(0,10);
+        } else {
+            this.options.initialDate = null;
+            this._input.min = null;
+        }
+        this.updateDisplay(this);
     },
     setMinimum: (value) => {
         if (value) {
@@ -176,6 +214,7 @@ L.Control.Calendar = L.Control.extend({
             this.options.minDate = null;
             this._input.min = null;
         }
+        this.updateDisplay(this);
     },
     setMaximum: (value) => {
         if (value) {
@@ -194,6 +233,7 @@ L.Control.Calendar = L.Control.extend({
             this.options.maxDate = null;
             this._input.max = null;
         }
+        this.updateDisplay(this);
     },
     onRemove: (map) => {},
     enable: () => {
@@ -260,7 +300,6 @@ function getCellFromPoint(point) {
 }
 
 function getCellNeighbors(cell) {
-    var s2cell = cell.s2cell;
     var s2neighbors = cell.s2cell.getNeighbors();
     var neighbors = s2neighbors.map((item) => { return { s2cell: item, polygon: s2CellToPolygon(item), id: S2.keyToId(item.toHilbertQuadkey()) }});
     return neighbors;
@@ -304,10 +343,12 @@ function clearCells() {
 }
 
 function recolorCellsInterval() {
-    if (
-        document.visibilityState === "visible" &&
-        (((getCurrentUTCDate() - lastRecolor) / (24 * 60 * 60 * 1000)) >= 1)
+    if ((document.visibilityState === "visible" &&
+        (((getCurrentUTCDate() - lastRecolor) / (24 * 60 * 60 * 1000)) >= 1) ||
+        (getCurrentUTCDate() < calendarControl.getValue()))
     ) {
+        calendarControl.setInitialDate(getCurrentUTCDate());
+        calendarControl.setMinimum(getCurrentUTCDate());
         recolorCells();
     }
 }
@@ -387,6 +428,13 @@ function mapMove() {
     }
 }
 
+function formatDate(date) {
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    return dayNames[date.getUTCDay()] + ', ' + monthNames[date.getUTCMonth()] + ' ' + date.getUTCDate();
+}
+
 function mapInit() {
     // map layers
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -406,7 +454,8 @@ function mapInit() {
         maxDate: nextYear,
         onSelectionChange: (value) => {
             recolorCells();
-        }
+        },
+        formatDisplay: formatDate
     });
     calendarControl.addTo(map);
     
@@ -510,7 +559,7 @@ function mapInit() {
         map.setView(newLocation.center, newLocation.zoom, {animate: true});
     });
 
-    timerId = setInterval(recolorCellsInterval, 6000);
+    timerId = setInterval(recolorCellsInterval, 60000);
 }
 
 getLocalStorageData();
