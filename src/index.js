@@ -30,7 +30,11 @@ terrainList.forEach((item, index) => {
 var visiblePolygons = {};
 const initLocation = L.Permalink.getMapLocation(-1, [37.7955742, -122.3958959]);
 const defaultZoom = 15;
-const map = L.map('map', {center: initLocation.center, zoom: initLocation.zoom < 0 ? defaultZoom : initLocation.zoom});
+const map = L.map('map', {
+    center: initLocation.center,
+    zoom: initLocation.zoom < 0 ? defaultZoom : initLocation.zoom,
+    zoomControl: false
+});
 L.Permalink.setup(map);
 const searchProvider = new GeoSearch.OpenStreetMapProvider();
 const terrainCellLevel = 14;
@@ -38,15 +42,13 @@ const terrainOpacity = 0.3;
 var lastRecolor = new Date(0);
 var terrainButtons = [];
 var overrideDate = null;
-const calendarControl = null;
+var calendarControl = null;
 var timerId = null;
 
 L.Control.Watermark = L.Control.extend({
     onAdd: function(map) {
         var text = L.DomUtil.create('span');
-
         text.innerHTML = appName + ' v' + appVersion;
-
         return text;
     },
     onRemove: (map) => {}
@@ -57,14 +59,159 @@ L.control.watermark = (opts) => {
 };
 
 L.Control.Calendar = L.Control.extend({
-    onAdd: (map) => {
-        var text = L.DomUtil.create('span');
+    options: {
+        position: 'topleft',
+        id: null,
+        initialDate: new Date(Date.now()),
+        clearUsesInitialDate: false,
+        title: '',
+        minDate: null,
+        maxDate: null,
+        onSelectionChange: (selectedDate) => {
+        },
+        formatDisplay: (selectedDate) => {
+
+        }
     },
-    onRemove: (map) => {}
+    initialize: (options) => {
+        L.setOptions(this, options);
+        if(this.options.initialDate)
+            this.options.initialDate.setUTCHours(0, 0, 0, 0);
+        this._container = L.DomUtil.create('div', 'leaflet-control-calendar leaflet-bar');
+
+        // button
+        this._a = L.DomUtil.create('a', '', this._container);
+        this._a.innerHTML = '<span class="fa fa-calendar"></span>';
+        this._a.role = 'button';
+        this._a.title = this.options.title;
+        this._a['aria-label'] = this.options.title;
+        this._a.href = '#';
+        this._a.style = 'float: left';
+
+        // date input
+        this._input = L.DomUtil.create('input', '', this._container);
+        this._input.type = 'date';
+        this._input.style = 'height:0;width:0;padding:0;border:0;display:block;visibility:hidden;';
+
+        // label
+        this._display = L.DomUtil.create('span', '', this._container);
+        
+        // initial options logic
+        if(this.options.initialDate)
+            this._input.value = this.options.initialDate.toISOString().substring(0,10);
+        if(this.options.minDate) {
+            this.options.minDate.setUTCHours(0, 0, 0, 0);
+            this._input.min = this.options.minDate.toISOString().substring(0,10);
+        }
+        if(this.options.maxDate) {
+            this.options.maxDate.setUTCHours(0, 0, 0, 0);
+            this._input.max = this.options.maxDate.toISOString().substring(0,10);
+        }
+    },
+    onAdd: (map) => {
+        L.DomEvent.on(this._container, {
+            click: (event) => {
+                L.DomEvent.stop(event);
+                this._input.showPicker();
+            }
+        });
+        L.DomEvent.on(this._container, {
+            dblclick: (event) => {
+                L.DomEvent.stop(event);
+            }
+        });
+        L.DomEvent.on(this._input, {
+            change: (event) => {
+                var selectedDate = null;
+                if (this._input.value) {
+                    var selectedDate = new Date(this._input.value);
+                    selectedDate.setUTCHours(0, 0, 0, 0);
+                } else if (this.options.clearUsesInitialDate && this.options.initialDate) {
+                    this._input.value = this.options.initialDate.toISOString().substring(0,10);
+                    selectedDate = this.options.initialDate;
+                }
+                this.options.onSelectionChange(selectedDate);
+            }
+        });
+        return this._container;
+    },
+    reset: () => {
+        if (this.options.clearUsesInitialDate && this.options.initialDate) {
+            var value = getCurrentUTCDate();
+            this._input.value = value.toISOString().substring(0,10);
+        }
+        else
+            this._input.value = ''
+    },
+    getValue: () => {
+        var selectedDate = null;
+        if (this._input.value) {
+            selectedDate = new Date(this._input.value);
+            selectedDate.setUTCHours(0, 0, 0, 0);
+        }
+        return selectedDate;
+    },
+    setValue: (value) => {
+        if (value) {
+            value.setUTCHours(0, 0, 0, 0);
+            this._input.value = value.toISOString().substring(0,10);
+        } else {
+            this._input.value = '';
+        }
+    },
+    setMinimum: (value) => {
+        if (value) {
+            value.setUTCHours(0, 0, 0, 0)
+            if (this._input.value) {
+                var selectedDate = new Date(this._input.value);
+                selectedDate.setUTCHours(0, 0, 0, 0);
+
+                if(value > selectedDate) {
+                    this._input.value = value.toISOString().substring(0,10);
+                }
+            }
+            this.options.minDate = value;
+            this._input.min = value.toISOString().substring(0,10);
+        } else {
+            this.options.minDate = null;
+            this._input.min = null;
+        }
+    },
+    setMaximum: (value) => {
+        if (value) {
+            value.setUTCHours(0, 0, 0, 0)
+            if (this._input.value) {
+                var selectedDate = new Date(this._input.value);
+                selectedDate.setUTCHours(0, 0, 0, 0);
+
+                if(value < selectedDate) {
+                    this._input.value = value.toISOString().substring(0,10);
+                }
+            }
+            this.options.maxDate = value;
+            this._input.max = value.toISOString().substring(0,10);
+        } else {
+            this.options.maxDate = null;
+            this._input.max = null;
+        }
+    },
+    onRemove: (map) => {},
+    enable: () => {
+        L.DomUtil.addClass(this._container, 'enabled');
+        L.DomUtil.removeClass(this._container, 'disabled');
+        this._container.setAttribute('aria-hidden', 'false');
+        return this;
+    },
+    disable: () => {
+        L.DomUtil.addClass(this._container, 'disabled');
+        L.DomUtil.removeClass(this._container, 'enabled');
+        this._container.setAttribute('aria-hidden', 'true');
+        return this;
+    },
 });
 
 L.control.calendar = (opts) => {
-
+    return new L.Control.Calendar(opts);
 };
 
 function s2IdToNumericToken(cellId) {
@@ -166,6 +313,18 @@ function recolorCellsInterval() {
 }
 
 function recolorCells() {
+    var now = getCurrentUTCDate();
+    var selectedDate = calendarControl.getValue();
+
+    if(selectedDate && selectedDate < now) {
+        calendarControl.reset();
+        calendarControl.setMinimum(getCurrentUTCDate());
+        var nextYear = getCurrentUTCDate();
+        nextYear.setDate(nextYear.getDate() - 1);
+        nextYear.setFullYear(nextYear.getFullYear() + 1);
+        calendarControl.setMaximum(nextYear);
+    }
+
     for (i in visiblePolygons) {
         recolorCell(i);
     }
@@ -179,13 +338,14 @@ function getCurrentUTCDate() {
 }
 
 function recolorCell(i) {
+    var terrainDate = calendarControl.getValue() || getCurrentUTCDate()
     if (i in visiblePolygons) {
-        visiblePolygons[i].setStyle({fillOpacity: terrainOpacity, fillColor: getTerrainColor(i)});
+        visiblePolygons[i].setStyle({fillOpacity: terrainOpacity, fillColor: getTerrainColor(i, terrainDate)});
     }
 }
 
-function getTerrainColor(i) {
-    var dayCount = ((getCurrentUTCDate().getTime() / 1000) / (24 * 60 * 60) + 1) % terrainList.length;
+function getTerrainColor(i, terrainDate) {
+    var dayCount = ((terrainDate.getTime() / 1000) / (24 * 60 * 60) + 1) % terrainList.length;
     var seedIndex = s2IdToNumericToken(i) % terrainList.length;
     var terrainIndex = (seedIndex + dayCount) % terrainList.length;
 
@@ -234,6 +394,22 @@ function mapInit() {
     }).addTo(map);
     
     // map controls
+    var nextYear = getCurrentUTCDate();
+    nextYear.setDate(nextYear.getDate() - 1);
+    nextYear.setFullYear(nextYear.getFullYear() + 1);
+    calendarControl = L.control.calendar({
+        position: 'topleft',
+        title: 'Select Date to Show',
+        initialDate: getCurrentUTCDate(),
+        clearUsesInitialDate: true,
+        minDate: getCurrentUTCDate(),
+        maxDate: nextYear,
+        onSelectionChange: (value) => {
+            recolorCells();
+        }
+    });
+    calendarControl.addTo(map);
+    
     const searchControl = new GeoSearch.GeoSearchControl({
         position: 'topleft',
         provider: searchProvider,
@@ -254,6 +430,10 @@ function mapInit() {
       });
     map.addControl(searchControl);
 
+    L.control.zoom({
+        position: 'topleft'
+    }).addTo(map);
+    
     L.control.locate({
         drawCircle: false,
         keepCurrentZoomLevel: true,
@@ -266,7 +446,6 @@ function mapInit() {
     // terrain controls
     terrainRotation.forEach((color, index) => {
         var buttonIndex = index;
-        var buttonState = index;
         var button = L.easyButton({
             id: 'terrain-button',
             states: terrainRotation.map((color, index) => {
