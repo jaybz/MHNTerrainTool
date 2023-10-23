@@ -63,3 +63,8 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v2
+      - name: Purge Cache
+        env:
+          - MHNMAP_ZONE_ID: ${{ secrets.MHNMAP_ZONE_ID }}
+          - MHNMAP_PURGE_CACHE_API_KEY: ${{ secrets.MHNMAP_PURGE_CACHE_API_KEY }}
+        run: 'curl -X POST "https://api.cloudflare.com/client/v4/zones/$MHNMAP_ZONE_ID/purge_cache" -H "Authorization: Bearer $MHNMAP_PURGE_CACHE_API_KEY" -H "Content-Type:application/json" --data ''{"purge_everything":true}'''
