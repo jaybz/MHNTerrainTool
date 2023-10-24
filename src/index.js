@@ -34,7 +34,8 @@ const map = L.map('map', {
     center: initLocation.center,
     zoom: initLocation.zoom < 0 ? defaultZoom : initLocation.zoom,
     zoomControl: false,
-    maxBounds: [[-90,-180], [90,180]]
+    maxBounds: [[-90,-180], [90,180]],
+    noWrap: true
 });
 
 L.Permalink.setup(map);
@@ -273,8 +274,6 @@ function s2GetVisibleCells(bounds) {
     var origin = getCellFromPoint(center);
     var visibleCells = [origin];
 
-    console.log(center);
-
     var visibleNeighbors = getCellNeighbors(origin)
         .filter((cell) => { return !visibleCells.map((cell) => { return cell.id }).includes(cell.id) })
         .filter((cell) => { return isCellVisible(bounds, cell) });
@@ -306,8 +305,6 @@ function getCellFromPoint(point) {
 function getCellNeighbors(cell) {
     var s2neighbors = cell.s2cell.getNeighbors();
     var neighbors = s2neighbors.map((item) => { return { s2cell: item, polygon: s2CellToPolygon(item), id: S2.keyToId(item.toHilbertQuadkey()), key: item.toHilbertQuadkey() }});
-
-    console.log(neighbors);
 
     return neighbors;
 }
@@ -428,7 +425,6 @@ function mapMove() {
                 const url = new URL(location.href);
                 url.hash = center.lat + ',' + center.lng + ',' + defaultZoom + 'z';
                 navigator.clipboard.writeText(url.href);
-                //console.log(cell.key);
             });
             cell.polygon.addTo(map);
         });
