@@ -1,6 +1,6 @@
 var S2 = require('s2-geometry').S2;
 const appName = 'MHNTerrainMap';
-const appVersion = '0.8.8';
+const appVersion = '0.8.9';
 const terrainList = [
     {   color: '#009933',
         name: 'Forest',
@@ -33,8 +33,10 @@ const defaultZoom = 15;
 const map = L.map('map', {
     center: initLocation.center,
     zoom: initLocation.zoom < 0 ? defaultZoom : initLocation.zoom,
-    zoomControl: false
+    zoomControl: false,
+    maxBounds: [[-90,-180], [90,180]]
 });
+
 L.Permalink.setup(map);
 const searchProvider = new GeoSearch.OpenStreetMapProvider();
 const terrainCellLevel = 14;
@@ -271,6 +273,8 @@ function s2GetVisibleCells(bounds) {
     var origin = getCellFromPoint(center);
     var visibleCells = [origin];
 
+    console.log(center);
+
     var visibleNeighbors = getCellNeighbors(origin)
         .filter((cell) => { return !visibleCells.map((cell) => { return cell.id }).includes(cell.id) })
         .filter((cell) => { return isCellVisible(bounds, cell) });
@@ -301,7 +305,10 @@ function getCellFromPoint(point) {
 
 function getCellNeighbors(cell) {
     var s2neighbors = cell.s2cell.getNeighbors();
-    var neighbors = s2neighbors.map((item) => { return { s2cell: item, polygon: s2CellToPolygon(item), id: S2.keyToId(item.toHilbertQuadkey()) }});
+    var neighbors = s2neighbors.map((item) => { return { s2cell: item, polygon: s2CellToPolygon(item), id: S2.keyToId(item.toHilbertQuadkey()), key: item.toHilbertQuadkey() }});
+
+    console.log(neighbors);
+
     return neighbors;
 }
 
@@ -421,6 +428,7 @@ function mapMove() {
                 const url = new URL(location.href);
                 url.hash = center.lat + ',' + center.lng + ',' + defaultZoom + 'z';
                 navigator.clipboard.writeText(url.href);
+                //console.log(cell.key);
             });
             cell.polygon.addTo(map);
         });
