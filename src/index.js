@@ -1,6 +1,6 @@
 var S2 = require('s2-geometry').S2;
 const appName = 'MHNTerrainMap';
-const appVersion = '0.8.8';
+const appVersion = '0.8.9';
 const terrainList = [
     {   color: '#009933',
         name: 'Forest',
@@ -33,8 +33,11 @@ const defaultZoom = 15;
 const map = L.map('map', {
     center: initLocation.center,
     zoom: initLocation.zoom < 0 ? defaultZoom : initLocation.zoom,
-    zoomControl: false
+    zoomControl: false,
+    maxBounds: [[-90,-180], [90,180]],
+    noWrap: true
 });
+
 L.Permalink.setup(map);
 const searchProvider = new GeoSearch.OpenStreetMapProvider();
 const terrainCellLevel = 14;
@@ -301,7 +304,8 @@ function getCellFromPoint(point) {
 
 function getCellNeighbors(cell) {
     var s2neighbors = cell.s2cell.getNeighbors();
-    var neighbors = s2neighbors.map((item) => { return { s2cell: item, polygon: s2CellToPolygon(item), id: S2.keyToId(item.toHilbertQuadkey()) }});
+    var neighbors = s2neighbors.map((item) => { return { s2cell: item, polygon: s2CellToPolygon(item), id: S2.keyToId(item.toHilbertQuadkey()), key: item.toHilbertQuadkey() }});
+
     return neighbors;
 }
 
