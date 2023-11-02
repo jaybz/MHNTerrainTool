@@ -1,6 +1,6 @@
 var S2 = require('s2-geometry').S2;
 const appName = 'MHNTerrainMap';
-const appVersion = '0.8.9';
+const appVersion = '0.9.0';
 const terrainList = [
     {   color: '#009933',
         name: 'Forest',
@@ -19,6 +19,15 @@ const terrainList = [
         icon: 'fa-tint' },*/
 ];
 
+/* terrain rotation control (same as in-game terrain list order)
+    0 - Forest
+    1 - Desert
+    2 - Swamp
+
+   default rotation array is [0, 1, 2]
+   - manipulating array will manipulate actual rotation in the map without
+     having to re-order the terrain list above
+*/
 var terrainRotation = [];
 var dataVersion = '1.' + terrainList.length;
 terrainList.forEach((item, index) => {
@@ -27,6 +36,7 @@ terrainList.forEach((item, index) => {
         .insertRule('#terrain-button.terrain' + (index + 1) + '-active { background-color: ' + terrainList[index].color + '; }');
 });
 
+var faceLookup = {};
 var visiblePolygons = {};
 const initLocation = L.Permalink.getMapLocation(-1, [37.7955742, -122.3958959]);
 const defaultZoom = 15;
@@ -294,17 +304,25 @@ function s2GetVisibleCells(bounds) {
     return visibleCells;
 }
 
+function s2KeyToId(key) {
+    var id = S2.keyToId(key);
+    var faceStr = key.split('/')[0];
+    var face = parseInt(faceStr);
+    faceLookup[id] = face;
+    return id;
+}
+
 function getCellFromPoint(point) {
     var s2cell = S2.S2Cell.FromLatLng(point, terrainCellLevel);
     var poly = s2CellToPolygon(s2cell);
     var key = s2cell.toHilbertQuadkey();
-    var id = S2.keyToId(key);
+    var id = s2KeyToId(key);
     return { s2cell: s2cell, polygon: poly, id: id, key: key };
 }
 
 function getCellNeighbors(cell) {
     var s2neighbors = cell.s2cell.getNeighbors();
-    var neighbors = s2neighbors.map((item) => { return { s2cell: item, polygon: s2CellToPolygon(item), id: S2.keyToId(item.toHilbertQuadkey()), key: item.toHilbertQuadkey() }});
+    var neighbors = s2neighbors.map((item) => { return { s2cell: item, polygon: s2CellToPolygon(item), id: s2KeyToId(item.toHilbertQuadkey()), key: item.toHilbertQuadkey() }});
 
     return neighbors;
 }
@@ -389,12 +407,12 @@ function recolorCell(i) {
     }
 }
 
-function getTerrainColor(i, terrainDate) {
-    var dayCount = ((terrainDate.getTime() / 1000) / (24 * 60 * 60) + 1) % terrainList.length;
-    var seedIndex = s2IdToNumericToken(i) % terrainList.length;
-    var terrainIndex = (seedIndex + dayCount) % terrainList.length;
-
-    return terrainList[terrainRotation[terrainIndex]].color;
+function getTerrainColor(cellId, terrainDate) {
+    var terrainIndex = (s2IdToNumericToken(cellId) // cell token
+        + (terrainDate.getTime() / 1000) / (24 * 60 * 60) // number of days since epoch
+        + 1 // add 1 to allow our array to match in-game terrain list order
+        ) % terrainList.length; // get current position in rotation
+    return terrainList[terrainRotation[terrainIndex]].color; // return color of terrain
 }
 
 function getLocalStorageData() {
@@ -425,6 +443,7 @@ function mapMove() {
                 const url = new URL(location.href);
                 url.hash = center.lat + ',' + center.lng + ',' + defaultZoom + 'z';
                 navigator.clipboard.writeText(url.href);
+                //console.log(cell.key + ' : ' + s2IdToNumericToken(cell.id) + ' : ' + cell.id);
             });
             cell.polygon.addTo(map);
         });
