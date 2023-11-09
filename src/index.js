@@ -1,24 +1,59 @@
 var S2 = require('s2-geometry').S2;
 const appName = 'MHNTerrainMap';
-const appVersion = '0.8.9';
+const appVersion = '0.9.0';
 const terrainList = [
     {   color: '#009933',
+        opacity: 0.3,
         name: 'Forest',
         icon: 'fa-tree' },
     {   color: '#ff9900',
+        opacity: 0.15,
         name: 'Desert',
         icon: 'fa-area-chart' },
     {   color: '#5522ff',
+        opacity: 0.2,
         name: 'Swamp',
         icon: 'fa-tint' },
-    /*{   color: '#99ccff',
+    /*
+    {   color: '#77bbff',
+        opacity: 0.3,
         name: 'Snow',
         icon: 'fa-snowflake-o' },
     {   color: '#ff3333',
+        opacity: 0.3,
         name: 'Lava',
-        icon: 'fa-tint' },*/
+        icon: 'fa-tint' },
+    */
 ];
 
+/* terrain rotation control (same as in-game terrain list order)
+    0 - Forest
+    1 - Desert
+    2 - Swamp
+
+   default rotation array is [0, 1, 2]
+   - manipulating array will manipulate actual rotation in the map without
+     having to re-order the terrain list above
+*/
+
+const poiType = [
+    {
+        name: 'Invisible POIs',
+        icon: 'fa fa-block fa-circle', // dot,
+        buttonIcon: 'fa fa-circle',
+        iconSize: [12,12],
+        visibility: false
+    },
+    {
+        name: 'Permanent Gathering Points',
+        icon: 'fa fa-block fa-square fa-2x rotate-by-45', // Square diamond
+        buttonIcon: 'fa fa-square rotate-by-45',
+        iconSize: [24,24],
+        visibility: true
+    },
+];
+
+var poiMarkers = [];
 var terrainRotation = [];
 var dataVersion = '1.' + terrainList.length;
 terrainList.forEach((item, index) => {
@@ -27,6 +62,12 @@ terrainList.forEach((item, index) => {
         .insertRule('#terrain-button.terrain' + (index + 1) + '-active { background-color: ' + terrainList[index].color + '; }');
 });
 
+var poiDB = new Dexie("MHNPOIDatabase");
+poiDB.version(2).stores({
+    pois: "[lat+lng],type,parentCellId"
+});
+
+var faceLookup = {};
 var visiblePolygons = {};
 const initLocation = L.Permalink.getMapLocation(-1, [37.7955742, -122.3958959]);
 const defaultZoom = 15;
@@ -41,12 +82,9 @@ const map = L.map('map', {
 L.Permalink.setup(map);
 const searchProvider = new GeoSearch.OpenStreetMapProvider();
 const terrainCellLevel = 14;
-const terrainOpacity = 0.3;
 var lastRecolor = new Date(0);
 var terrainButtons = [];
-var overrideDate = null;
 var calendarControl = null;
-var timerId = null;
 
 L.Control.Watermark = L.Control.extend({
     onAdd: function(map) {
@@ -294,17 +332,25 @@ function s2GetVisibleCells(bounds) {
     return visibleCells;
 }
 
+function s2KeyToId(key) {
+    var id = S2.keyToId(key);
+    var faceStr = key.split('/')[0];
+    var face = parseInt(faceStr);
+    faceLookup[id] = face;
+    return id;
+}
+
 function getCellFromPoint(point) {
     var s2cell = S2.S2Cell.FromLatLng(point, terrainCellLevel);
     var poly = s2CellToPolygon(s2cell);
     var key = s2cell.toHilbertQuadkey();
-    var id = S2.keyToId(key);
+    var id = s2KeyToId(key);
     return { s2cell: s2cell, polygon: poly, id: id, key: key };
 }
 
 function getCellNeighbors(cell) {
     var s2neighbors = cell.s2cell.getNeighbors();
-    var neighbors = s2neighbors.map((item) => { return { s2cell: item, polygon: s2CellToPolygon(item), id: S2.keyToId(item.toHilbertQuadkey()), key: item.toHilbertQuadkey() }});
+    var neighbors = s2neighbors.map((item) => { return { s2cell: item, polygon: s2CellToPolygon(item), id: s2KeyToId(item.toHilbertQuadkey()), key: item.toHilbertQuadkey() }});
 
     return neighbors;
 }
@@ -383,23 +429,34 @@ function getCurrentUTCDate() {
 }
 
 function recolorCell(i) {
-    var terrainDate = calendarControl.getValue() || getCurrentUTCDate()
     if (i in visiblePolygons) {
-        visiblePolygons[i].setStyle({fillOpacity: terrainOpacity, fillColor: getTerrainColor(i, terrainDate)});
+        var terrain = getTerrain(i);
+        visiblePolygons[i].setStyle({fillOpacity: terrain.opacity, fillColor: terrain.color});
     }
 }
 
-function getTerrainColor(i, terrainDate) {
-    var dayCount = ((terrainDate.getTime() / 1000) / (24 * 60 * 60) + 1) % terrainList.length;
-    var seedIndex = s2IdToNumericToken(i) % terrainList.length;
-    var terrainIndex = (seedIndex + dayCount) % terrainList.length;
+function getTerrainIndex(cellId) {
+    var terrainDate = calendarControl.getValue() || getCurrentUTCDate();
+    var terrainIndex = (s2IdToNumericToken(cellId) // cell token
+        + (terrainDate.getTime() / 1000) / (24 * 60 * 60) // number of days since epoch
+        + 1 // add 1 to allow our array to match in-game terrain list order
+        ) % terrainList.length; // get current position in rotation
+    return terrainIndex;
+}
 
-    return terrainList[terrainRotation[terrainIndex]].color;
+function getTerrain(cellId) {
+    return terrainList[terrainRotation[getTerrainIndex(cellId)]]; // terrain definition
 }
 
 function getLocalStorageData() {
     if (localStorage.dataVersion === dataVersion) {
         terrainRotation = JSON.parse(localStorage.terrainRotation);
+        if (localStorage.poiVisibility) {
+            var poiVisibility = JSON.parse(localStorage.poiVisibility);
+            poiVisibility.forEach((v,i) => {
+                poiType[i].visibility = v;
+            });
+        }
     } else {
         saveLocalStorageData();
     }
@@ -408,6 +465,9 @@ function getLocalStorageData() {
 function saveLocalStorageData() {
     localStorage.dataVersion = dataVersion;
     localStorage.terrainRotation = JSON.stringify(terrainRotation);
+    var poiVisibility = [];
+    poiVisibility = poiType.map(t => t.visibility);
+    localStorage.poiVisibility = JSON.stringify(poiVisibility);
 }
 
 function mapMove() {
@@ -419,7 +479,7 @@ function mapMove() {
         cells.forEach((cell) => {
             visiblePolygons[cell.id] = cell.polygon;
 
-            cell.polygon.on('click', (e) => {
+            cell.polygon.on('click', e => {
                 var id = cell.id;
                 var center = visiblePolygons[cell.id].getCenter();
                 const url = new URL(location.href);
@@ -429,6 +489,72 @@ function mapMove() {
             cell.polygon.addTo(map);
         });
         recolorCells();
+    }
+
+    redrawPOIs();
+}
+
+function redrawPOIs() {
+    clearPOIs();
+    if (map.getZoom() >= 15) {
+        poiDB.pois.where('parentCellId').anyOf(Object.keys(visiblePolygons))
+        .and(p => poiType[p.type].visibility)
+        .toArray().then((result) => {
+            result.forEach((poi) => {
+                drawPOI(poi);
+            });
+        });
+    }
+}
+
+function drawPOI(poi) {
+    if (poiType[poi.type].visibility) {
+        var parentPolygon = visiblePolygons[poi.parentCellId];
+        if (parentPolygon) {
+            var marker = L.marker([poi.lat, poi.lng],
+                {
+                    icon: L.divIcon({ 
+                        className: '',
+                        html: '<div class="' + poiType[poi.type].icon + '" style="color: ' + getTerrain(poi.parentCellId).color + ';"></div>',
+                        iconSize: poiType[poi.type].iconSize
+                    }),
+                    riseOnHover: true,
+                    autoPanOnFocus: false,
+                    title: poi.name,
+                    bubblingMouseEvents: false
+                });
+            poiMarkers.push(marker);
+            marker.addTo(map);
+            marker.bindPopup(poi.name + '<br><img src="' + poi.img + '" width=192 height=256 />');
+            /*marker.on('click', e => {
+                var currentPOI = poi;
+                console.log(currentPOI);
+                console.log(marker);
+            });*/
+            marker.on('contextmenu', e => {
+                var currentPOI = poi;
+                console.log(currentPOI);
+                console.log(marker);
+
+                currentPOI.type = currentPOI.type > 0 ? 0 : 1; // toggle poi type
+                poiDB.pois.put(poi).then(() => {
+                    marker.setIcon(L.divIcon({ 
+                        className: '',
+                        html: '<div class="' + poiType[poi.type].icon + '" style="color: ' + getTerrain(poi.parentCellId).color + ';"></div>',
+                        iconSize: poiType[poi.type].iconSize
+                    }));
+                }).catch(e => {
+                    alert("Error changing POI type: " + (e.stack || e));
+                    console.error("Error changing POI type: " + (e.stack || e));})
+            });
+        }
+    }
+}
+
+function clearPOIs() {
+    for(i in poiMarkers) {
+        map.removeLayer(poiMarkers[i]);
+        delete poiMarkers[i];
     }
 }
 
@@ -440,11 +566,84 @@ function formatDate(date) {
 }
 
 function mapInit() {
+    var portalUpload = L.DomUtil.get('portalUpload');
+    L.DomEvent.on(portalUpload, 'change', (e) => {
+        const file = e.target.files[0];
+        var reader = new FileReader();
+        reader.addEventListener(
+            'load',
+            () => {
+                var result = Papa.parse(reader.result, {
+                    header: true,
+                    quoteChar: '"',
+                    escapeChar: '\\',
+                    skipEmptyLines: false,
+                    transformHeader: (h) => { return h.trim().toLowerCase(); }
+                });
+                var hasType = result.meta.fields.includes("type");
+                console.log(result.errors);
+                if (result.errors.length == 0 || confirm("Errors were found with the file's formatting. Continue importing readable portals?")) {
+                    var newPOIs = result.data.map((val) => {
+                        var obj = {
+                            lat: parseFloat(val.latitude),
+                            lng: parseFloat(val.longitude),
+                        };
+
+                        if (hasType && !isNaN(parseInt(val.type))) obj.type = parseInt(val.type) ?? 0;
+                        if (val.name) obj.name = val.name;
+                        if (val.image) obj.img = val.image;
+                        return obj;
+                    });
+                    var dataErrors = newPOIs.filter((val) => { return isNaN(val.lat) || isNaN(val.lng) || (hasType && val.type && isNaN(val.type)); }).length;
+
+                    if (dataErrors == 0 || confirm("Invalid values were found for certain fields. Continue importing valid data?")) {
+                        newPOIs = newPOIs.filter((val) => { return !isNaN(val.lat) && !isNaN(val.lng); });
+                        //poiDB.pois.bulkGet(newPOIs.map(val => {return [val.lat, val.lng];})).then(result => {
+                        poiDB.pois.toArray().then(result => {
+                            result.forEach(r => { 
+                                var p = newPOIs.find(p => { return p.lat == r.lat && p.lng == r.lng; });
+                                if (p) {
+                                    if (!p.name) p.name = r.name ?? '';
+                                    if (!p.img) p.img = r.img ?? '';
+                                    if (isNaN(p.type)) p.type = r.type ?? 0;
+                                }
+                            });
+                            newPOIs.forEach(p => {
+                                if(!p.name) p.name = '';
+                                if(!p.img) p.img = '';
+                                if(!p.type) p.type = 0;
+                                p.parentCellId = getCellFromPoint({ lat: p.lat, lng: p.lng}).id;
+                            });
+                            poiDB.transaction("rw", poiDB.pois, async () => {
+                                await poiDB.pois.bulkPut(newPOIs);
+                            }).then(() => {
+                                redrawPOIs();
+                            }).catch(e => {
+                                alert("Error saving POIs: " + (e.stack || e));
+                                console.error("Error saving POIs: " + (e.stack || e));
+                            })
+                        }).catch(e => {
+                            alert("Error querying existing POIs: " + (e.stack || e));
+                            console.error("Error querying existing POIs: " + (e.stack || e));
+                        });    
+                    }
+                }
+            },
+            false
+        );
+        reader.readAsText(file);
+        portalUpload.value = '';
+    });
+    
     // map layers
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
-    
+
+    /*map.on('contextmenu', (event) => {
+        console.log(event.latlng);
+    });*/
+
     // map controls
     var nextYear = getCurrentUTCDate();
     nextYear.setDate(nextYear.getDate() - 1);
@@ -546,6 +745,113 @@ function mapInit() {
         }]
     }));
     L.easyBar(terrainButtons).addTo(map);
+
+    // POI controls
+    var poiButtons = [];
+    poiType.forEach((type, index) => {
+        var typeBtn = L.easyButton({
+            id: `poi-visibility-button`,
+            states: [{
+                stateName: `type${index}show`,
+                icon: `${type.buttonIcon} poi-hidden`,
+                title: "Show " + type.name,
+                onClick: function(btn, map) {
+                    poiType[index].visibility = true;
+                    btn.state(`type${index}hide`);
+                    saveLocalStorageData();
+                    redrawPOIs();
+                }
+            },
+            {
+                stateName: `type${index}hide`,
+                icon: `${type.buttonIcon} poi-visible`,
+                title: "Hide " + type.name,
+                onClick: function(btn, map) {
+                    poiType[index].visibility = false;
+                    btn.state(`type${index}show`);
+                    saveLocalStorageData();
+                    redrawPOIs();
+                }
+            }]
+        });
+        typeBtn.state(`type${index}${type.visibility ? 'hide' : 'show'}`)
+        poiButtons.push(typeBtn);
+    });
+
+    poiButtons.push(
+        L.easyButton({
+            id: 'export-button',
+            states: [{
+                icon: 'fa-download',
+                title: 'Export POI Data',
+                onClick: function(btn, map){
+                    //const exportFileName = appName + '-' + appVersion + '-POI-' + '.json';
+                    const now = new Date();
+                    const exportFileName = `${ appName }-${ appVersion }-POI-${ now.getFullYear() }${ now.getMonth() > 8 ? '' : '0' }${ now.getMonth()+1}${now.getDate() > 9 ? '' : '0' }${ now.getDate() }${ now.getTime() }.csv`;
+                    poiDB.pois.toArray().then((result) => {
+                        const exportPOIs = result.map((poi) => {
+                            return {
+                                name: poi.name,
+                                latitude: poi.lat,
+                                longitude: poi.lng,
+                                image: poi.img,
+                                type: poi.type
+                            }
+                        })
+                        var columnList = ['name','latitude','longitude','type','image'];
+                        var serializedData = Papa.unparse(exportPOIs, {
+                            header: true,
+                            quoteChar: '"',
+                            escapeChar: '\\',
+                            skipEmptyLines: 'greedy',
+                            columns: ['name','latitude','longitude','type','image']
+                        }) || columnList.join(',');
+
+                        var file = new Blob([serializedData], {type: 'text/csv'});
+                        var a = document.createElement('a');
+                        a.href = URL.createObjectURL(file);
+                        a.download = exportFileName;
+                        a.click();
+                    });
+                }
+            }]
+        }),
+        L.easyButton({
+            id: 'import-button',
+            states: [{
+                icon: 'fa-upload',
+                title: 'Import POI Data',
+                onClick: function(btn, map) {
+                    portalUpload.click();
+                }
+            }]
+        }),
+        L.easyButton({
+            id: 'clear-data-button',
+            states: [{
+                icon: 'fa-trash',
+                title: 'Clear POI Data',
+                onClick: function(btn, map){
+                    if (confirm('This will clear all points of interest. Are you sure you want to do this?')) {
+                        poiDB.pois.toArray().then((result) => {
+                            poiDB.pois.bulkDelete(result.map(r => { return [r.lat, r.lng]} )).then(() => {
+                                redrawPOIs();
+                            }).catch(e => {
+                                alert("Error clearing POIs: " + (e.stack || e));
+                            });
+                        });
+
+                        /*poiDB.pois.clear().then(() => {
+                            redrawPOIs();
+                        }).catch(e => {
+                            alert("Error clearing POIs: " + (e.stack || e));
+                        });*/
+                    }
+                }
+            }]
+        })
+    );
+    L.easyBar(poiButtons).addTo(map);
 
     // version watermark
     L.control.watermark({ position: 'topright' }).addTo(map);
