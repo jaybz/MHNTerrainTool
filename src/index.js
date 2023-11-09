@@ -1,6 +1,6 @@
 var S2 = require('s2-geometry').S2;
 const appName = 'MHNTerrainMap';
-const appVersion = '0.9.1';
+const appVersion = '0.9.2';
 const terrainList = [
     {   color: '#009933',
         opacity: 0.3,
@@ -420,6 +420,7 @@ function recolorCells() {
         recolorCell(i);
     }
     lastRecolor = getCurrentUTCDate();
+    redrawPOIs();
 }
 
 function getCurrentUTCDate() {
@@ -533,9 +534,6 @@ function drawPOI(poi) {
             });*/
             marker.on('contextmenu', e => {
                 var currentPOI = poi;
-                console.log(currentPOI);
-                console.log(marker);
-
                 currentPOI.type = currentPOI.type > 0 ? 0 : 1; // toggle poi type
                 poiDB.pois.put(poi).then(() => {
                     marker.setIcon(L.divIcon({ 
