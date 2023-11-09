@@ -1,6 +1,6 @@
 var S2 = require('s2-geometry').S2;
 const appName = 'MHNTerrainMap';
-const appVersion = '0.9.0';
+const appVersion = '0.9.1';
 const terrainList = [
     {   color: '#009933',
         opacity: 0.3,
@@ -575,14 +575,29 @@ function mapInit() {
             () => {
                 var result = Papa.parse(reader.result, {
                     header: true,
-                    quoteChar: '"',
-                    escapeChar: '\\',
                     skipEmptyLines: false,
                     transformHeader: (h) => { return h.trim().toLowerCase(); }
                 });
+
+                if (result.errors.length > 1 && result.errors.find(e => e.code == "InvalidQuotes")) {
+                    var testResult = Papa.parse(reader.result, {
+                        header: true,
+                        skipEmptyLines: false,
+                        quoteChar: '"',
+                        escapeChar: '\\',
+                        transformHeader: (h) => { return h.trim().toLowerCase(); }
+                    });
+                    if (testResult.errors.length == 0 || !testResult.errors.find(e => e.code == "InvalidQuotes")) {
+                        result = testResult;
+                    } else if (testResult.errors.length < result.errors.length) {
+                        result = testResult;
+                    }
+                }
+
                 var hasType = result.meta.fields.includes("type");
-                console.log(result.errors);
-                if (result.errors.length == 0 || confirm("Errors were found with the file's formatting. Continue importing readable portals?")) {
+                if (result.errors.length > 0)
+                    console.log(result);
+                if (result.errors.length == 0 || confirm("Errors were found with the file's formatting. Continue importing readable POIs?")) {
                     var newPOIs = result.data.map((val) => {
                         var obj = {
                             lat: parseFloat(val.latitude),
@@ -801,8 +816,6 @@ function mapInit() {
                         var columnList = ['name','latitude','longitude','type','image'];
                         var serializedData = Papa.unparse(exportPOIs, {
                             header: true,
-                            quoteChar: '"',
-                            escapeChar: '\\',
                             skipEmptyLines: 'greedy',
                             columns: ['name','latitude','longitude','type','image']
                         }) || columnList.join(',');
