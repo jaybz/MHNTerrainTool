@@ -575,14 +575,14 @@ function mapInit() {
             () => {
                 var result = Papa.parse(reader.result, {
                     header: true,
-                    skipEmptyLines: false,
+                    skipEmptyLines: true,
                     transformHeader: (h) => { return h.trim().toLowerCase(); }
                 });
 
                 if (result.errors.length > 1 && result.errors.find(e => e.code == "InvalidQuotes")) {
                     var testResult = Papa.parse(reader.result, {
                         header: true,
-                        skipEmptyLines: false,
+                        skipEmptyLines: true,
                         quoteChar: '"',
                         escapeChar: '\\',
                         transformHeader: (h) => { return h.trim().toLowerCase(); }
