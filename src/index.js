@@ -1,6 +1,6 @@
 var S2 = require('s2-geometry').S2;
 const appName = 'MHNTerrainMap';
-const appVersion = '0.9.2';
+const appVersion = '0.9.3';
 const terrainList = [
     {   color: '#009933',
         opacity: 0.3,
@@ -526,7 +526,7 @@ function drawPOI(poi) {
                 });
             poiMarkers.push(marker);
             marker.addTo(map);
-            marker.bindPopup(poi.name + '<br><img src="' + poi.img + '" width=192 height=256 />');
+            marker.bindPopup(poi.name + '<br><img src="' + poi.img + '" width=192 height=256 />', { autoPan: false });
             /*marker.on('click', e => {
                 var currentPOI = poi;
                 console.log(currentPOI);
