@@ -1,6 +1,6 @@
 var S2 = require('s2-geometry').S2;
 const appName = 'MHNTerrainMap';
-const appVersion = '0.9.3';
+const appVersion = '0.9.4';
 const terrainList = [
     {   color: '#009933',
         opacity: 0.3,
@@ -53,7 +53,6 @@ const poiType = [
     },
 ];
 
-var poiMarkers = [];
 var terrainRotation = [];
 var dataVersion = '1.' + terrainList.length;
 terrainList.forEach((item, index) => {
@@ -69,6 +68,7 @@ poiDB.version(2).stores({
 
 var faceLookup = {};
 var visiblePolygons = {};
+var visiblePOIs = [];
 const initLocation = L.Permalink.getMapLocation(-1, [37.7955742, -122.3958959]);
 const defaultZoom = 15;
 const map = L.map('map', {
@@ -472,7 +472,7 @@ function saveLocalStorageData() {
 }
 
 function mapMove() {
-    bounds = map.getBounds();
+    var bounds = map.getBounds();
     clearCells();
 
     if (map.getZoom() >= 14) {
@@ -496,7 +496,7 @@ function mapMove() {
 }
 
 function redrawPOIs() {
-    clearPOIs();
+    clearInvisiblePOIs();
     if (map.getZoom() >= 15) {
         poiDB.pois.where('parentCellId').anyOf(Object.keys(visiblePolygons))
         .and(p => poiType[p.type].visibility)
@@ -509,7 +509,9 @@ function redrawPOIs() {
 }
 
 function drawPOI(poi) {
-    if (poiType[poi.type].visibility) {
+    if (poiType[poi.type].visibility 
+        && !visiblePOIs.some(v => { v.poi.lat == poi.lat && v.poi.lng == poi.lng && v.poi.name == poi.name })
+    ) {
         var parentPolygon = visiblePolygons[poi.parentCellId];
         if (parentPolygon) {
             var marker = L.marker([poi.lat, poi.lng],
@@ -524,9 +526,12 @@ function drawPOI(poi) {
                     title: poi.name,
                     bubblingMouseEvents: false
                 });
-            poiMarkers.push(marker);
+            visiblePOIs.push({
+                poi: poi,
+                marker: marker
+            });
             marker.addTo(map);
-            marker.bindPopup(poi.name + '<br><img src="' + poi.img + '" width=192 height=256 />', { autoPan: false });
+            marker.bindPopup(poi.name + '<br><img src="' + poi.img + '" width=192 height=256 />');
             /*marker.on('click', e => {
                 var currentPOI = poi;
                 console.log(currentPOI);
@@ -549,11 +554,22 @@ function drawPOI(poi) {
     }
 }
 
-function clearPOIs() {
-    for(i in poiMarkers) {
-        map.removeLayer(poiMarkers[i]);
-        delete poiMarkers[i];
+function clearAllPOIs() {
+    for(i in visiblePOIs) {
+        map.removeLayer(visiblePOIs[i].marker);
     }
+    visiblePOIs = [];
+}
+
+function clearInvisiblePOIs() {
+    visiblePOIs.forEach((p, i) => {
+        var poi = p.poi;
+        var marker = p.marker;
+        if(!poiType[poi.type].visibility || !Object.keys(visiblePolygons).includes(poi.parentCellId)) {
+            delete visiblePOIs[i];
+            map.removeLayer(marker);
+        }
+    });
 }
 
 function formatDate(date) {
@@ -630,6 +646,7 @@ function mapInit() {
                             poiDB.transaction("rw", poiDB.pois, async () => {
                                 await poiDB.pois.bulkPut(newPOIs);
                             }).then(() => {
+                                clearAllPOIs();
                                 redrawPOIs();
                             }).catch(e => {
                                 alert("Error saving POIs: " + (e.stack || e));
