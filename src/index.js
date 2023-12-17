@@ -1,6 +1,6 @@
 var S2 = require('s2-geometry').S2;
 const appName = 'MHNTerrainMap';
-const appVersion = '0.9.4';
+const appVersion = '0.9.5';
 const terrainList = [
     {   color: '#009933',
         opacity: 0.3,
@@ -491,8 +491,6 @@ function mapMove() {
         });
         recolorCells();
     }
-
-    redrawPOIs();
 }
 
 function redrawPOIs() {
@@ -548,7 +546,8 @@ function drawPOI(poi) {
                     }));
                 }).catch(e => {
                     alert("Error changing POI type: " + (e.stack || e));
-                    console.error("Error changing POI type: " + (e.stack || e));})
+                    console.error("Error changing POI type: " + (e.stack || e));
+                });
             });
         }
     }
