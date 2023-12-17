@@ -491,8 +491,6 @@ function mapMove() {
         });
         recolorCells();
     }
-
-    redrawPOIs();
 }
 
 function redrawPOIs() {
@@ -548,7 +546,8 @@ function drawPOI(poi) {
                     }));
                 }).catch(e => {
                     alert("Error changing POI type: " + (e.stack || e));
-                    console.error("Error changing POI type: " + (e.stack || e));})
+                    console.error("Error changing POI type: " + (e.stack || e));
+                });
             });
         }
     }
