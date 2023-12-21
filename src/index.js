@@ -1,6 +1,6 @@
 var S2 = require('s2-geometry').S2;
 const appName = 'MHNTerrainMap';
-const appVersion = '0.9.5';
+const appVersion = '0.9.6';
 const terrainList = [
     {   color: '#009933',
         opacity: 0.3,
@@ -524,10 +524,18 @@ function drawPOI(poi) {
                     title: poi.name,
                     bubblingMouseEvents: false
                 });
+
+            var alreadyVisible = visiblePOIs.find((e) => { return e.poi.name == poi.name && e.poi.lat == poi.lat && e.poi.lng == poi.lng; });
+            if (alreadyVisible) {
+                map.removeLayer(alreadyVisible.marker);
+                visiblePOIs.splice(visiblePOIs.indexOf(alreadyVisible), 1)
+            }
+
             visiblePOIs.push({
                 poi: poi,
                 marker: marker
             });
+
             marker.addTo(map);
             marker.bindPopup(poi.name + '<br><img src="' + poi.img + '" width=192 height=256 />');
             /*marker.on('click', e => {
@@ -569,6 +577,8 @@ function clearInvisiblePOIs() {
             map.removeLayer(marker);
         }
     });
+
+    visiblePOIs = visiblePOIs.filter((e) => e !== undefined); // clear deleted POIs
 }
 
 function formatDate(date) {
